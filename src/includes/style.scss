@@ -1,0 +1,228 @@
+/****************/
+/* THEME COLORS */
+/****************/
+
+$blue: #4183C4;
+$black: #000;
+$white: #fff;
+$gray: #666;
+$lightGray: #aaa;
+$lighterGray: #eee;
+$darkGray: #333;
+$darkerGray: #222;
+
+[theme="light"] {
+  #{--link-color}: $blue;
+  #{--nav-color}: $gray;
+  #{--name-color}: $gray;
+  #{--description-color}: $gray;
+  #{--main-background-color}: $white;
+  #{--main-text-color}: $black;
+  #{--select-background-color}: $lightGray;
+  #{--border-bottom-color}: $lightGray;
+  #{--date-color}: $darkGray;
+  #light-mode {
+    display: none;
+  }
+}
+
+[theme="dark"] {
+  #{--link-color}: $blue;
+  #{--nav-color}: $lightGray;
+  #{--name-color}: $lightGray;
+  #{--description-color}: $lightGray;
+  #{--main-background-color}: $darkerGray;
+  #{--main-text-color}: $lighterGray;
+  #{--select-background-color}: $lightGray;
+  #{--border-bottom-color}: $gray;
+  #{--date-color}: $gray;
+  #dark-mode {
+    display: none;
+  }
+}
+
+/**************/
+/* BASE RULES */
+/**************/
+
+body {
+  margin: 0;
+  font: 18px/1.4 Helvetica, Arial, sans-serif;
+  color: var(--main-text-color);
+  background: var(--main-background-color);
+  transition: background 1s ease;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 740px;
+  padding: 0 10px;
+  width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  a {
+    color: inherit;
+  }
+}
+
+p {
+  margin: 15px 0;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+  cursor: pointer;
+  &:hover, &:active {
+    color: var(--link-color);
+  }
+}
+
+img {
+  max-width: 100%;
+}
+
+.date {
+  font-style: italic;
+  font-size: 15px;
+  color: var(--date-color);
+}
+
+::-moz-selection {
+  background: var(--select-background-color);
+}
+::selection {
+  background: var(--select-background-color);
+}
+
+// Nicolas Gallagher's micro clearfix hack
+// http://nicolasgallagher.com/micro-clearfix-hack/
+.clearfix:before,
+.clearfix:after {
+    content: " ";
+    display: table;
+}
+
+.clearfix:after {
+    clear: both;
+}
+
+// Mobile breakpoints
+@mixin mobile {
+  @media screen and (max-width: 640px) {
+    @content;
+  }
+}
+
+/************/
+/* CONTENTS */
+/************/
+
+.masthead {
+  padding: 10px 0;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border-bottom-color);
+
+  @include mobile {
+    text-align: center;
+  }
+}
+
+.site-info {
+  float: left;
+
+  @include mobile {
+    float: none;
+    display: block;
+    margin: 0 auto;
+  }
+}
+
+.site-name {
+  margin: 0;
+  font-weight: 300;
+  font-size: 26px;
+  letter-spacing: 1px;
+  color: var(--name-color);
+}
+
+.site-description {
+  margin: -5px 0 0 0;
+  font-size: 14px;
+  color: var(--description-color);
+
+  @include mobile {
+    margin: 3px 0;
+  }
+}
+
+nav {
+  float: right;
+  margin-top: 23px; // @TODO: Vertically middle align
+  color: var(--nav-color);
+
+  a {
+    margin-left: 20px;
+    text-align: right;
+    text-transform: uppercase;
+    font-weight: 300;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: inherit;
+
+    @include mobile {
+      margin: 0 10px;
+    }
+  }
+
+  @include mobile {
+    float: none;
+    margin-top: 9px;
+    display: block;
+  }
+}
+
+.posts > .post {
+  padding-bottom: 2em;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border-bottom-color);
+}
+
+.posts > .post:last-child {
+  padding-bottom: 1em;
+  border-bottom: none;
+}
+
+.post {
+  .read-more {
+    text-transform: uppercase;
+    font-size: 15px;
+  }
+}
+
+/************/
+/* ISSO FIX */
+/************/
+
+article > #isso-thread {
+  margin-right: 10px;
+  font-size: 16px;
+
+  .textarea-wrapper {
+    color: $black;
+  }
+
+  a:hover {
+    color: var(--link-color) !important;
+    text-shadow: none !important;
+  }
+
+  a.author {
+    color: var(--name-color);
+  }
+}

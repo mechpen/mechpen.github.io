@@ -1,0 +1,26 @@
+---
+layout: default
+
+---
+
+<div class="posts">
+  {% for post in collections.all reversed %}
+  {% if post.data.type == "post" and post.data.list  %}
+    <article class="post">
+
+      <h1><a href="{{ post.url }}">{{ post.data.title }}</a></h1>
+
+      <div class="date">
+        {{ post.date | date: "%B %e, %Y" }}
+      </div>
+
+      <div class="entry">
+        <p>{{ post.data.excerpt }}</p>
+      </div>
+
+      <a href="{{ post.url }}" class="read-more">read more</a>
+
+    </article>
+  {% endif %}
+  {% endfor %}
+</div>

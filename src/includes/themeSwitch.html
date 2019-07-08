@@ -1,0 +1,24 @@
+<script type="text/javascript">
+
+  var currentTheme = localStorage.getItem('theme')
+
+  function setTheme(theme) {
+    if (theme === "dark") {
+      document.documentElement.setAttribute('theme', 'dark')
+    } else {
+      document.documentElement.setAttribute('theme', 'light')
+    }
+  }
+  setTheme(currentTheme)
+
+  function switchTheme() {
+    if (currentTheme == "dark") {
+      currentTheme = ""
+    } else {
+      currentTheme = "dark"
+    }
+    localStorage.setItem('theme', currentTheme)
+    setTheme(currentTheme)
+  }
+
+</script>

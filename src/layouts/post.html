@@ -1,0 +1,20 @@
+---
+layout: default
+
+---
+
+<article class="post">
+  <h1>{{ title }}</h1>
+
+  <div class="date">
+    {{ page.date | date: "%B %e, %Y" }}
+  </div>
+
+  <div class="entry">
+    <p>{{ excerpt }}</p>
+    {{ content }}
+  </div>
+
+  <script data-isso="/comment/" src="/comment/js/embed.min.js"></script>
+  <section id="isso-thread"></section>
+</article>
