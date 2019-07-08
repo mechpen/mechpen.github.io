@@ -1,7 +1,6 @@
 const fs = require("fs")
 const path = require("path")
 const { execSync } = require("child_process")
-const util = require("util")
 const sass = require("sass")
 
 module.exports = function(eleventyConfig) {
