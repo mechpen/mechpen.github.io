@@ -3,6 +3,12 @@
   <head>
     {% include header.html %}
     {% include themeSwitch.html %}
+    {% for style in styles %}
+    <link href="{{ style }}" rel="stylesheet" />
+    {% endfor %}
+    {% for script in scripts %}
+    <script src="{{ script }}"></script>
+    {% endfor %}
   </head>
 
   <body>
@@ -10,7 +16,7 @@
       <div class="container">
         <header class="masthead clearfix">
           <div class="site-info">
-            <h1 class="site-name"><a href="/">{{ site.name }}</a></h1>
+            <a href="/" class="site-name">{{ site.name }}</a>
             <p class="site-description">{{ site.description }}</p>
           </div>
           <nav>

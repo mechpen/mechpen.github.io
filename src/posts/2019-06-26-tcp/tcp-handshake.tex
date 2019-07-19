@@ -1,0 +1,30 @@
+\documentclass{minimal}
+\usepackage{microtype}
+\DisableLigatures{encoding=*,family=*}
+\usepackage{tikz}
+\usetikzlibrary{backgrounds,decorations.pathmorphing,arrows.meta,positioning}
+
+\begin{document}
+\begin{tikzpicture}
+  [
+    show background rectangle,
+    background rectangle/.style = {fill=white},
+    endpoint/.style = {above,yshift=5},
+    packet line/.style = thick,
+    delayed/.style = {decorate,decoration=straight zigzag},
+    send id/.style = {left,xshift=-3,fill=yellow},
+    recv id/.style = {right,xshift=3,fill=yellow},
+    send info/.style = {pos=0.05,above,sloped,anchor=south west,fill=white,yshift=3},
+    recv info/.style = {pos=0.05,above,sloped,anchor=south east,fill=white,yshift=3},
+    > = Stealth,
+  ]
+
+  \draw (0,-1.4)  node[endpoint] {Sender}   -- (0,-9);
+  \draw (10,-1.4) node[endpoint] {Receiver} -- (10,-9);
+
+  \draw [->,packet line,delayed] (2,-2.4) node[send id] {1} -- node[send info] {SYN,seq=N}       (10,-4);
+  \draw [->,packet line]         (10,-4)  node[recv id] {2} -- node[recv info] {SYN-ACK,ack=N+1} (0,-6);
+  \draw [->,packet line]         (0,-6)   node[send id] {3} -- node[send info] {RST,seq=N+1}     (10,-8);
+
+\end{tikzpicture}
+\end{document}

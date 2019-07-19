@@ -11,10 +11,25 @@ module.exports = function(eleventyConfig) {
       layouts: "layouts",
       data: "data",
       output: "dist",
-    }
+    },
+    templateFormats: [
+      "md",
+      "html",
+      "css",
+      "png",
+      "pdf",
+    ],
   }
 
-  eleventyConfig.addPassthroughCopy("src/assets")
+  var md = require("markdown-it")({
+    html: true,
+  })
+  .use(require('markdown-it-anchor'), {
+    level: 1,
+    permalink: true,
+  })
+  .use(require('markdown-it-prism'))
+  eleventyConfig.setLibrary("md", md)
 
   var findFile = function(name, scope) {
     var inputPath = scope.contexts[0].page.inputPath
@@ -28,30 +43,35 @@ module.exports = function(eleventyConfig) {
   }
 
   eleventyConfig.addLiquidTag("loadScss", function() {
-    var name
-
     return {
       parse: function(token) {
-        name = token.args
+        this.name = token.args
       },
       render: function(scope) {
-        return sass.renderSync({file: findFile(name, scope)}).css
+        return sass.renderSync({file: findFile(this.name, scope)}).css
       },
     }
   })
 
   eleventyConfig.addLiquidTag("loadPgf", function() {
-    var name
-
     return {
       parse: function(token) {
-        name = token.args
+        this.name = token.args
       },
       render: function(scope) {
-        var srcFile = findFile(name, scope)
+        var srcFile = findFile(this.name, scope)
         var srcDir = path.dirname(srcFile)
-        execSync("latex -halt-on-error -output-directory " + srcDir + " " + srcFile)
-        return execSync("dvisvgm -s " + srcFile.replace(/tex$/, "dvi"))
+        var cmd = ""
+
+        cmd = "latex -halt-on-error -output-directory"
+            + " " + srcDir + " " + srcFile
+        console.log("Running", cmd)
+        execSync(cmd)
+
+        cmd = "dvisvgm -s " + srcFile.replace(/tex$/, "dvi")
+        console.log("Running", cmd)
+        var svg = execSync(cmd)
+        return '<div class="img">' + svg + '</div>'
       },
     }
   })

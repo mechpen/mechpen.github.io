@@ -66,6 +66,27 @@ h1, h2, h3, h4, h5, h6 {
   a {
     color: inherit;
   }
+  .header-anchor {
+      display: none;
+  }
+  &:hover, &:active {
+    .header-anchor {
+      display: inline;
+      color: var(--link-color);
+    }
+  }
+}
+
+h1 {
+  font-size: 1.5em;
+}
+
+h2 {
+  font-size: 1.2em;
+}
+
+h3 {
+  font-size: 1em;
 }
 
 p {
@@ -205,12 +226,18 @@ nav {
   }
 }
 
+.entry > .img {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 10px 0;
+}
+
 /************/
 /* ISSO FIX */
 /************/
 
-article > #isso-thread {
-  margin-right: 10px;
+section#isso-thread {
+  margin: 20px 10px 50px 0;
   font-size: 16px;
 
   .textarea-wrapper {
