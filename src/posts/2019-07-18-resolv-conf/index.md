@@ -8,9 +8,9 @@ excerpt:
 
   The file <code>/etc/resolv.conf</code> defines nameservers for
   glibc.  Normally this file contains 2 or 3 nameservers for
-  redundancy.  When the nameservers are serving behind one virtual IP,
-  it is still better to have multiple (max 3) duplicated entries than
-  having just one entry.
+  redundancy.  When the nameservers serve behind one virtual IP, it is
+  still better to have multiple (max 3) duplicated entries than having
+  just one entry.
 
 ---
 
