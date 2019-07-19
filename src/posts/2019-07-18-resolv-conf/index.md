@@ -14,9 +14,9 @@ excerpt:
 
 ---
 
-The following tests show the difference between 1 entry and 3
-duplicated entries in `resolv.conf`.  The setup uses a fake nameserver
-`10.10.10.10` that does not exist.
+The following tests show the difference between 1 entry and 3 entries
+in `resolv.conf`.  The setup uses a fake nameserver `10.10.10.10` that
+does not exist.
 
 ## single entry
 
@@ -35,7 +35,7 @@ Tcpdump:
 11:55:05.476349 IP 10.0.0.10.55920 > 10.10.10.10.53: 62314+ A? google.com. (28)
 ```
 
-## 3 duplicated entries
+## 3 dup entries
 
 ```x
 $ time curl google.com
@@ -68,5 +68,5 @@ The tests show that:
      nameserver entries,
 
 Load balancers normally route packets based on addresses and ports.
-Using multiple duplicated entries diversifies source ports, which in
+Using multiple identical entries diversifies source ports, which in
 turn diversifies the actual nameservers.
