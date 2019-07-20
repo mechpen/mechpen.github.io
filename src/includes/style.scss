@@ -61,7 +61,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  margin: 20px 0 10px;
+  margin: 15px 0 0;
   padding: 0;
   a {
     color: inherit;
@@ -90,7 +90,7 @@ h3 {
 }
 
 p {
-  margin-bottom: 0.5em;
+  margin: 0.5em 0;
 }
 
 a {
@@ -123,12 +123,12 @@ a {
 // http://nicolasgallagher.com/micro-clearfix-hack/
 .clearfix:before,
 .clearfix:after {
-    content: " ";
-    display: table;
+  content: " ";
+  display: table;
 }
 
 .clearfix:after {
-    clear: both;
+  clear: both;
 }
 
 // Mobile breakpoints
