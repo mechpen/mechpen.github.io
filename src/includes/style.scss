@@ -15,12 +15,12 @@ $darkerGray: #222;
   #{--link-color}: $blue;
   #{--nav-color}: $gray;
   #{--name-color}: $gray;
-  #{--description-color}: $gray;
   #{--main-background-color}: $white;
   #{--main-text-color}: $black;
   #{--select-background-color}: $lightGray;
   #{--border-bottom-color}: $lightGray;
   #{--date-color}: $darkGray;
+  #{--note-background-color}: $lighterGray;
   #light-mode {
     display: none;
   }
@@ -30,12 +30,12 @@ $darkerGray: #222;
   #{--link-color}: $blue;
   #{--nav-color}: $lightGray;
   #{--name-color}: $lightGray;
-  #{--description-color}: $lightGray;
   #{--main-background-color}: $darkerGray;
   #{--main-text-color}: $lighterGray;
   #{--select-background-color}: $lightGray;
   #{--border-bottom-color}: $gray;
   #{--date-color}: $gray;
+  #{--note-background-color}: $darkGray;
   #dark-mode {
     display: none;
   }
@@ -102,8 +102,8 @@ a {
   }
 }
 
-img {
-  max-width: 100%;
+.vskip {
+  margin-top: 10px;
 }
 
 .date {
@@ -143,10 +143,11 @@ img {
 /************/
 
 .masthead {
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom-width: 1px;
   border-bottom-style: solid;
   border-bottom-color: var(--border-bottom-color);
+  display: flex;
 
   @include mobile {
     text-align: center;
@@ -161,30 +162,21 @@ img {
     display: block;
     margin: 0 auto;
   }
-}
 
-.site-name {
-  margin: 0;
-  font-weight: 300;
-  font-size: 26px;
-  letter-spacing: 1px;
-  color: var(--name-color);
-}
-
-.site-description {
-  margin: -5px 0 0 0;
-  font-size: 14px;
-  color: var(--description-color);
-
-  @include mobile {
-    margin: 3px 0;
+  .site-name {
+    margin: 0;
+    font-weight: 300;
+    font-size: 26px;
+    letter-spacing: 1px;
+    color: var(--name-color);
   }
 }
 
 nav {
   float: right;
-  margin-top: 23px; // @TODO: Vertically middle align
   color: var(--nav-color);
+  margin: auto;
+  margin-right: 0;
 
   a {
     margin-left: 20px;
@@ -230,6 +222,22 @@ nav {
   display: flex;
   justify-content: center;
   padding: 10px 0 10px 0;
+}
+
+.notes {
+  a.note {
+    float: left;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: calc(100% * .3333);
+    height: 80px;
+    margin-top: 10px;
+    color: var(--main-text-color);
+  }
+  a.note:hover {
+    background: var(--note-background-color);
+  }
 }
 
 /************/

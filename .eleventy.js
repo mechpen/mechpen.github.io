@@ -23,6 +23,7 @@ module.exports = function(eleventyConfig) {
 
   var md = require("markdown-it")({
     html: true,
+    linkify: true,
   })
   .use(require('markdown-it-anchor'), {
     level: 1,

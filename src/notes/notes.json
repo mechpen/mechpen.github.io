@@ -1,6 +1,6 @@
 {
-  "type": "post",
-  "layout": "post",
+  "type": "note",
+  "layout": "page",
   "styles": [
     "/assets/prism.css"
   ]

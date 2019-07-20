@@ -1,9 +1,7 @@
 ---
-title: DNS lookup with resolv.conf
+title: resolv.conf for nameservers with a virtual IP
 tags: [dns]
 list: true
-styles:
-- /assets/prism.css
 excerpt:
 
   The file <code>/etc/resolv.conf</code> defines nameservers for
@@ -69,4 +67,11 @@ The tests show that:
 
 Load balancers normally route packets based on addresses and ports.
 Using multiple identical entries diversifies source ports, which in
-turn diversifies the actual nameservers.
+turn diversifies the actual nameservers for a single lookup.  So it's
+better to have the following in `resolv.conf`:
+
+```x
+nameserver 10.10.10.10
+nameserver 10.10.10.10
+nameserver 10.10.10.10
+```

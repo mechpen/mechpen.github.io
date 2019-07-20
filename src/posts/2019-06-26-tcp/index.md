@@ -2,8 +2,6 @@
 title: TCP sequence number and 3-way handshake
 tags: [tcp]
 list: true
-styles:
-- /assets/prism.css
 excerpt:
 
   One challenge of TCP is to handle stale packets. Packets from

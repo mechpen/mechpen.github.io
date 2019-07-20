@@ -1,0 +1,13 @@
+---
+layout: default
+
+---
+
+<div class="vskip"></div>
+<div class="notes">
+  {% for post in collections.all reversed %}
+  {% if post.data.type == "note" and post.data.list  %}
+  <a class="note" href="{{ post.url }}">{{ post.data.title }}</a>
+  {% endif %}
+  {% endfor %}
+</div>
