@@ -29,10 +29,10 @@ scenario.
 {% loadPgf tcp-stale-seq.tex %}
 
 Packets 1 and 2 are stale packets from a previous connection.  The
-sender re-uses initial sequence number `N` in packet 3, before the
-stale packets are gone.  The sender completes 3-way handshake and
-sends data in packet 4.  When the sender receives packet 2, it falsely
-assumes that 9 bytes are delivered to the receiver.
+sender re-uses initial sequence number N in packet 3, before the stale
+packets are gone.  The sender completes 3-way handshake and sends data
+in packet 4.  When the sender receives packet 2, it falsely assumes
+that 9 bytes are delivered to the receiver.
 
 I am not sure how the sequence number rule is implemented in practice.
 
@@ -59,8 +59,8 @@ problem.  When a host receives a SYN packet, it needs to figure out
 whether this packet is stale or not, then it could discard the stale
 SYN packet without setting up a connection.  The 3-way handshake is
 designed to help validate SYN packets.  For example, in the following
-figure, the stale `SYN` packet 1 could not complete 3-way handshake
-because of the `RST` packet 3.
+figure, the stale SYN packet 1 could not complete 3-way handshake
+because of the RST packet 3.
 
 {% loadPgf tcp-handshake.tex %}
 

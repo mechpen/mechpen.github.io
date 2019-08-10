@@ -112,6 +112,11 @@ a {
   color: var(--date-color);
 }
 
+code {
+  font-size: 0.9em;
+  background: var(--note-background-color);
+}
+
 ::-moz-selection {
   background: var(--select-background-color);
 }
@@ -131,13 +136,6 @@ a {
   clear: both;
 }
 
-// Mobile breakpoints
-@mixin mobile {
-  @media screen and (max-width: 640px) {
-    @content;
-  }
-}
-
 /************/
 /* CONTENTS */
 /************/
@@ -148,23 +146,13 @@ a {
   border-bottom-style: solid;
   border-bottom-color: var(--border-bottom-color);
   display: flex;
-
-  @include mobile {
-    text-align: center;
-  }
 }
 
 .site-info {
-  float: left;
-
-  @include mobile {
-    float: none;
-    display: block;
-    margin: 0 auto;
-  }
+  display: flex;
 
   .site-name {
-    margin: 0;
+    margin: auto;
     font-weight: 300;
     font-size: 26px;
     letter-spacing: 1px;
@@ -173,7 +161,6 @@ a {
 }
 
 nav {
-  float: right;
   color: var(--nav-color);
   margin: auto;
   margin-right: 0;
@@ -185,17 +172,8 @@ nav {
     font-weight: 300;
     font-size: 14px;
     letter-spacing: 1px;
+    white-space: nowrap;
     color: inherit;
-
-    @include mobile {
-      margin: 0 10px;
-    }
-  }
-
-  @include mobile {
-    float: none;
-    margin-top: 9px;
-    display: block;
   }
 }
 
@@ -236,6 +214,7 @@ nav {
     margin-top: 10px;
     color: var(--main-text-color);
   }
+
   a.note:hover {
     background: var(--note-background-color);
   }

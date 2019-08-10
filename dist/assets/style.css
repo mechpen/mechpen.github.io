@@ -1,0 +1,217 @@
+/****************/
+/* THEME COLORS */
+/****************/
+[theme=light] {
+  --link-color: #4183C4;
+  --nav-color: #666;
+  --name-color: #666;
+  --main-background-color: #fff;
+  --main-text-color: #000;
+  --select-background-color: #aaa;
+  --border-bottom-color: #aaa;
+  --date-color: #333;
+  --note-background-color: #eee;
+}
+[theme=light] #light-mode {
+  display: none;
+}
+
+[theme=dark] {
+  --link-color: #4183C4;
+  --nav-color: #aaa;
+  --name-color: #aaa;
+  --main-background-color: #222;
+  --main-text-color: #eee;
+  --select-background-color: #aaa;
+  --border-bottom-color: #666;
+  --date-color: #666;
+  --note-background-color: #333;
+}
+[theme=dark] #dark-mode {
+  display: none;
+}
+
+/**************/
+/* BASE RULES */
+/**************/
+body {
+  margin: 0;
+  font: 18px/1.4 Helvetica, Arial, sans-serif;
+  color: var(--main-text-color);
+  background: var(--main-background-color);
+  transition: background 1s ease;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 740px;
+  padding: 0 10px;
+  width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 15px 0 0;
+  padding: 0;
+}
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+  color: inherit;
+}
+h1 .header-anchor, h2 .header-anchor, h3 .header-anchor, h4 .header-anchor, h5 .header-anchor, h6 .header-anchor {
+  display: none;
+}
+h1:hover .header-anchor, h1:active .header-anchor, h2:hover .header-anchor, h2:active .header-anchor, h3:hover .header-anchor, h3:active .header-anchor, h4:hover .header-anchor, h4:active .header-anchor, h5:hover .header-anchor, h5:active .header-anchor, h6:hover .header-anchor, h6:active .header-anchor {
+  display: inline;
+  color: var(--link-color);
+}
+
+h1 {
+  font-size: 1.5em;
+}
+
+h2 {
+  font-size: 1.2em;
+}
+
+h3 {
+  font-size: 1em;
+}
+
+p {
+  margin: 0.5em 0;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+  cursor: pointer;
+}
+a:hover, a:active {
+  color: var(--link-color);
+}
+
+.vskip {
+  margin-top: 10px;
+}
+
+.date {
+  font-style: italic;
+  font-size: 15px;
+  color: var(--date-color);
+}
+
+code {
+  font-size: 0.9em;
+  background: var(--note-background-color);
+}
+
+::-moz-selection {
+  background: var(--select-background-color);
+}
+
+::selection {
+  background: var(--select-background-color);
+}
+
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  display: table;
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+/************/
+/* CONTENTS */
+/************/
+.masthead {
+  padding: 8px 0;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border-bottom-color);
+  display: flex;
+}
+
+.site-info {
+  display: flex;
+}
+.site-info .site-name {
+  margin: auto;
+  font-weight: 300;
+  font-size: 26px;
+  letter-spacing: 1px;
+  color: var(--name-color);
+}
+
+nav {
+  color: var(--nav-color);
+  margin: auto;
+  margin-right: 0;
+}
+nav a {
+  margin-left: 20px;
+  text-align: right;
+  text-transform: uppercase;
+  font-weight: 300;
+  font-size: 14px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  color: inherit;
+}
+
+.posts > .post {
+  padding-bottom: 1em;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border-bottom-color);
+}
+
+.posts > .post:last-child {
+  padding-bottom: 1em;
+  border-bottom: none;
+}
+
+.post .more {
+  margin-right: 20px;
+  text-transform: uppercase;
+  font-size: 15px;
+}
+
+.entry > .img {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 10px 0;
+}
+
+.notes a.note {
+  float: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: calc(100% * .3333);
+  height: 80px;
+  margin-top: 10px;
+  color: var(--main-text-color);
+}
+.notes a.note:hover {
+  background: var(--note-background-color);
+}
+
+/************/
+/* ISSO FIX */
+/************/
+section#isso-thread {
+  margin: 20px 10px 50px 0;
+  font-size: 16px;
+}
+section#isso-thread .textarea-wrapper {
+  color: #000;
+}
+section#isso-thread a:hover {
+  color: var(--link-color) !important;
+  text-shadow: none !important;
+}
+section#isso-thread a.author {
+  color: var(--name-color);
+}

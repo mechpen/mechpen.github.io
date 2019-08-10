@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>resolv.conf for nameservers with a virtual IP – Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link href="/assets/style.css" rel="stylesheet" />
+
+    <script type="text/javascript">
+
+  var currentTheme = localStorage.getItem('theme')
+
+  function setTheme(theme) {
+    if (theme === "dark") {
+      document.documentElement.setAttribute('theme', 'dark')
+    } else {
+      document.documentElement.setAttribute('theme', 'light')
+    }
+  }
+  setTheme(currentTheme)
+
+  function switchTheme() {
+    if (currentTheme == "dark") {
+      currentTheme = ""
+    } else {
+      currentTheme = "dark"
+    }
+    localStorage.setItem('theme', currentTheme)
+    setTheme(currentTheme)
+  }
+
+</script>
+
+    
+    <link href="/assets/prism.css" rel="stylesheet" />
+    
+    
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+            <a id="light-mode" onclick="switchTheme()">light mode</a>
+            <a id="dark-mode" onclick="switchTheme()">dark mode</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      
+<div class="post">
+  <h1>resolv.conf for nameservers with a virtual IP</h1>
+
+  <div class="date">
+    July 18, 2019
+  </div>
+
+  <div class="entry">
+    <p>The file <code>/etc/resolv.conf</code> defines nameservers for glibc.  Normally this file contains 2 or 3 nameservers for redundancy.  When the nameservers serve behind one virtual IP, it is still better to have multiple (max 3) duplicated entries than having just one entry.</p>
+    <p>The following tests show the difference between 1 entry and 3 entries
+in <code>resolv.conf</code>.  The setup uses a fake nameserver <code>10.10.10.10</code> that
+does not exist.</p>
+<h2 id="single-entry">single entry <a class="header-anchor" href="#single-entry" aria-hidden="true">¶</a></h2>
+<pre class="language-x"><code class="language-x">$ time curl google.com
+curl: (6) Could not resolve host: google.com
+
+real    0m10.124s
+user    0m0.025s
+sys     0m0.008s
+</code></pre>
+<p>Tcpdump:</p>
+<pre class="language-x"><code class="language-x">11:55:00.470327 IP 10.0.0.10.55920 &gt; 10.10.10.10.53: 62314+ A? google.com. (28)
+11:55:05.476349 IP 10.0.0.10.55920 &gt; 10.10.10.10.53: 62314+ A? google.com. (28)
+</code></pre>
+<h2 id="3-dup-entries">3 dup entries <a class="header-anchor" href="#3-dup-entries" aria-hidden="true">¶</a></h2>
+<pre class="language-x"><code class="language-x">$ time curl google.com
+curl: (6) Could not resolve host: google.com
+
+real    0m28.193s
+user    0m0.033s
+sys     0m0.018s
+</code></pre>
+<p>Tcpdump:</p>
+<pre class="language-x"><code class="language-x">11:52:38.865095 IP 10.0.0.10.53712 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
+11:52:43.871066 IP 10.0.0.10.58702 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
+11:52:46.875065 IP 10.0.0.10.51804 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
+11:52:52.882092 IP 10.0.0.10.53712 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
+11:52:57.888033 IP 10.0.0.10.58702 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
+11:53:00.892013 IP 10.0.0.10.51804 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
+</code></pre>
+<p>The tests show that:</p>
+<ol>
+<li>
+<p>The glibc lookup function sends a DNS query to a nameserver,
+waits for 5 seconds, then sends another query to the next
+nameserver.</p>
+</li>
+<li>
+<p>The lookup function iterates all entries twice before giving up.</p>
+</li>
+<li>
+<p>The lookup function uses different source ports for different
+nameserver entries,</p>
+</li>
+</ol>
+<p>Load balancers normally route packets based on addresses and ports.
+Using multiple identical entries diversifies source ports, which in
+turn diversifies the actual nameservers for a single lookup.  So it's
+better to have the following in <code>resolv.conf</code>:</p>
+<pre class="language-x"><code class="language-x">nameserver 10.10.10.10
+nameserver 10.10.10.10
+nameserver 10.10.10.10
+</code></pre>
+
+  </div>
+</div>
+
+<script data-isso="/comment/" src="/comment/js/embed.min.js"></script>
+<section id="isso-thread"></section>
+
+    </div>
+  </body>
+</html>

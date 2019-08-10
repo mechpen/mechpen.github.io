@@ -49,7 +49,10 @@ module.exports = function(eleventyConfig) {
         this.name = token.args
       },
       render: function(scope) {
-        return sass.renderSync({file: findFile(this.name, scope)}).css
+        var outputPath = "/assets/" + this.name.replace(/scss$/, "css")
+        var css = sass.renderSync({file: findFile(this.name, scope)}).css
+        fs.writeFileSync(config.dir.output + outputPath, css)
+        return '<link href="' + outputPath +  '" rel="stylesheet" />'
       },
     }
   })
