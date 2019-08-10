@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link href="/assets/style.css" rel="stylesheet" />
+
+    <script type="text/javascript">
+
+  var currentTheme = localStorage.getItem('theme')
+
+  function setTheme(theme) {
+    if (theme === "dark") {
+      document.documentElement.setAttribute('theme', 'dark')
+    } else {
+      document.documentElement.setAttribute('theme', 'light')
+    }
+  }
+  setTheme(currentTheme)
+
+  function switchTheme() {
+    if (currentTheme == "dark") {
+      currentTheme = ""
+    } else {
+      currentTheme = "dark"
+    }
+    localStorage.setItem('theme', currentTheme)
+    setTheme(currentTheme)
+  }
+
+</script>
+
+    
+    
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+            <a id="light-mode" onclick="switchTheme()">light mode</a>
+            <a id="dark-mode" onclick="switchTheme()">dark mode</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      
+<div class="posts">
+  
+  
+    <article class="post">
+
+      <h1><a href="/posts/2019-08-03-bpf-map/">Linux bpf maps</a></h1>
+
+      <div class="date">
+        August  3, 2019
+      </div>
+
+      <div class="entry">
+        <p>Linux bpf maps are used to share data among bpf programs and user applications.  A bpf map could be created by simply declaring a <code>bpf_elf_map</code> struct.  Under the hood, lots of things work together to set up the maps.</p>
+      </div>
+
+      <a href="/posts/2019-08-03-bpf-map/" class="more">read more</a>
+      <a href="/posts/2019-08-03-bpf-map/#isso-thread" class="more">comments</a>
+
+    </article>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <article class="post">
+
+      <h1><a href="/posts/2019-07-18-resolv-conf/">resolv.conf for nameservers with a virtual IP</a></h1>
+
+      <div class="date">
+        July 18, 2019
+      </div>
+
+      <div class="entry">
+        <p>The file <code>/etc/resolv.conf</code> defines nameservers for glibc.  Normally this file contains 2 or 3 nameservers for redundancy.  When the nameservers serve behind one virtual IP, it is still better to have multiple (max 3) duplicated entries than having just one entry.</p>
+      </div>
+
+      <a href="/posts/2019-07-18-resolv-conf/" class="more">read more</a>
+      <a href="/posts/2019-07-18-resolv-conf/#isso-thread" class="more">comments</a>
+
+    </article>
+  
+  
+  
+  
+  
+  
+  
+    <article class="post">
+
+      <h1><a href="/posts/2019-06-26-tcp/">TCP sequence number and 3-way handshake</a></h1>
+
+      <div class="date">
+        June 26, 2019
+      </div>
+
+      <div class="entry">
+        <p>One challenge of TCP is to handle stale packets. Packets from previous connections may get delayed in the network and interfere with new connections. To solve this problem, TCP enforces the following rule on sequence numbers.</p>
+      </div>
+
+      <a href="/posts/2019-06-26-tcp/" class="more">read more</a>
+      <a href="/posts/2019-06-26-tcp/#isso-thread" class="more">comments</a>
+
+    </article>
+  
+  
+</div>
+<script data-isso="/comment/" src="/comment/js/embed.min.js"></script>
+
+    </div>
+  </body>
+</html>

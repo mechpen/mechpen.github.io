@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>misc – Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link href="/assets/style.css" rel="stylesheet" />
+
+    <script type="text/javascript">
+
+  var currentTheme = localStorage.getItem('theme')
+
+  function setTheme(theme) {
+    if (theme === "dark") {
+      document.documentElement.setAttribute('theme', 'dark')
+    } else {
+      document.documentElement.setAttribute('theme', 'light')
+    }
+  }
+  setTheme(currentTheme)
+
+  function switchTheme() {
+    if (currentTheme == "dark") {
+      currentTheme = ""
+    } else {
+      currentTheme = "dark"
+    }
+    localStorage.setItem('theme', currentTheme)
+    setTheme(currentTheme)
+  }
+
+</script>
+
+    
+    <link href="/assets/prism.css" rel="stylesheet" />
+    
+    
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+            <a id="light-mode" onclick="switchTheme()">light mode</a>
+            <a id="dark-mode" onclick="switchTheme()">dark mode</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      
+<article class="page">
+  <h1>misc</h1>
+
+  <div class="entry">
+    <p>DNS should be pingable for network monitoring.</p>
+<p>NAT</p>
+<p>When there’s no free port available, the packet could be dropped.</p>
+
+  </div>
+</article>
+
+    </div>
+  </body>
+</html>

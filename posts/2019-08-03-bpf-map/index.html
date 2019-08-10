@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Linux bpf maps – Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link href="/assets/style.css" rel="stylesheet" />
+
+    <script type="text/javascript">
+
+  var currentTheme = localStorage.getItem('theme')
+
+  function setTheme(theme) {
+    if (theme === "dark") {
+      document.documentElement.setAttribute('theme', 'dark')
+    } else {
+      document.documentElement.setAttribute('theme', 'light')
+    }
+  }
+  setTheme(currentTheme)
+
+  function switchTheme() {
+    if (currentTheme == "dark") {
+      currentTheme = ""
+    } else {
+      currentTheme = "dark"
+    }
+    localStorage.setItem('theme', currentTheme)
+    setTheme(currentTheme)
+  }
+
+</script>
+
+    
+    <link href="/assets/prism.css" rel="stylesheet" />
+    
+    
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+            <a id="light-mode" onclick="switchTheme()">light mode</a>
+            <a id="dark-mode" onclick="switchTheme()">dark mode</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      
+<div class="post">
+  <h1>Linux bpf maps</h1>
+
+  <div class="date">
+    August  3, 2019
+  </div>
+
+  <div class="entry">
+    <p>Linux bpf maps are used to share data among bpf programs and user applications.  A bpf map could be created by simply declaring a <code>bpf_elf_map</code> struct.  Under the hood, lots of things work together to set up the maps.</p>
+    <h2 id="tracing-of-an-example">Tracing of an example <a class="header-anchor" href="#tracing-of-an-example" aria-hidden="true">¶</a></h2>
+<p>The following is a simple bpf program using a map:</p>
+<pre class="language-c"><code class="language-c"><span class="token function">__section</span><span class="token punctuation">(</span><span class="token string">"maps"</span><span class="token punctuation">)</span>
+<span class="token keyword">struct</span> <span class="token class-name">bpf_elf_map</span> counter_array <span class="token operator">=</span> <span class="token punctuation">{</span>
+        <span class="token punctuation">.</span>type           <span class="token operator">=</span> BPF_MAP_TYPE_ARRAY<span class="token punctuation">,</span>
+        <span class="token punctuation">.</span>size_key       <span class="token operator">=</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span>uint32_t<span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token punctuation">.</span>size_value     <span class="token operator">=</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span>uint32_t<span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token punctuation">.</span>pinning        <span class="token operator">=</span> PIN_GLOBAL_NS<span class="token punctuation">,</span>
+        <span class="token punctuation">.</span>max_elem       <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+<span class="token function">__section</span><span class="token punctuation">(</span><span class="token string">"ingress"</span><span class="token punctuation">)</span>
+<span class="token keyword">int</span> <span class="token function">handle_ingress</span><span class="token punctuation">(</span><span class="token keyword">struct</span> <span class="token class-name">__sk_buff</span> <span class="token operator">*</span>skb<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+        <span class="token keyword">int</span> key <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token operator">*</span>val<span class="token punctuation">;</span>
+
+        val <span class="token operator">=</span> <span class="token function">map_lookup_elem</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>counter_array<span class="token punctuation">,</span> <span class="token operator">&amp;</span>key<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>val<span class="token punctuation">)</span>
+                <span class="token function">lock_xadd</span><span class="token punctuation">(</span>val<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p><code>llvm</code> could compile the C code into an ELF object file.  The <code>map</code>
+section of the object file contains the <code>counter_array</code> struct.  The
+<code>ingress</code> section contains bpf instructions of the function
+<code>handle_ingress()</code>, in which all references to the variable
+<code>counter_array</code> are not resolved.  The disassembler prints the
+following bpf instructions for the <code>map_lookup_elem()</code> function call:</p>
+<pre class="language-x"><code class="language-x">        18 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00         r1 = 0 ll
+        85 00 00 00 01 00 00 00                                 call 1
+</code></pre>
+<p>As shown by <a href="https://github.com/iovisor/bpf-docs/blob/master/eBPF.md">bpf spec</a>, the first instruction is a 16 bytes
+instruction with the following fields:</p>
+<ul>
+<li>
+<p><code>opcode</code> is 0x18, which is <code>BPF_LD | BPF_IMM | BPF_DW</code>.  The
+opcode loads an 64 bits immediate value to a destination register.</p>
+</li>
+<li>
+<p><code>dst</code> is 1, which refers to register <code>r1</code>.</p>
+</li>
+<li>
+<p><code>src</code> is 0, because it loads immediate values from the
+instructions.</p>
+</li>
+<li>
+<p><code>imm</code> is 0, because the value is not yet resolved.</p>
+</li>
+</ul>
+<p>When <code>tc</code> loads the object file, it reads the map definition from
+<code>counter_array</code> and calls <code>bpf()</code> syscall to create the bpf map.  The
+<code>bpf()</code> syscall returns a file descriptor of the map object.  <code>tc</code>
+then resolves references to <code>counter_array</code> with the file descriptor
+as show in the following code snippet in <code>lib/bpf.c: bpf_apply_relo_map()</code>:</p>
+<pre class="language-c"><code class="language-c">        prog<span class="token operator">-></span>insns<span class="token punctuation">[</span>insn_off<span class="token punctuation">]</span><span class="token punctuation">.</span>src_reg <span class="token operator">=</span> BPF_PSEUDO_MAP_FD<span class="token punctuation">;</span>
+        prog<span class="token operator">-></span>insns<span class="token punctuation">[</span>insn_off<span class="token punctuation">]</span><span class="token punctuation">.</span>imm <span class="token operator">=</span> ctx<span class="token operator">-></span>map_fds<span class="token punctuation">[</span>map_idx<span class="token punctuation">]</span><span class="token punctuation">;</span>
+</code></pre>
+<p><code>BPF_PSEUDO_MAP_FD</code> is 1, and here the map file descriptor is 6.  The
+bpf instructions now becomes:</p>
+<pre class="language-x"><code class="language-x">        18 11 00 00 06 00 00 00 00 00 00 00 00 00 00 00
+        85 00 00 00 01 00 00 00                        
+</code></pre>
+<p>When the kernel loads the above bpf instructions, it converts the file
+descriptor to the address of the map object.  The call stack goes as
+follows:</p>
+<pre class="language-c"><code class="language-c">    <span class="token function">sys_bpf</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token operator">--</span><span class="token operator">></span> <span class="token function">bpf_prog_load</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token operator">--</span><span class="token operator">></span> <span class="token function">bpf_check</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+            <span class="token operator">--</span><span class="token operator">></span> <span class="token function">replace_map_fd_with_map_ptr</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	    <span class="token operator">--</span><span class="token operator">></span> <span class="token function">do_check</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token operator">--</span><span class="token operator">></span> <span class="token function">check_ld_imm</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                <span class="token operator">==</span><span class="token operator">></span> <span class="token function">check_func_arg</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+            <span class="token operator">--</span><span class="token operator">></span> <span class="token function">convert_pseudo_ld_imm64</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<p>Function <code>replace_map_fd_with_map_ptr()</code> rewrites the instruction by
+the following code:</p>
+<pre class="language-c"><code class="language-c">        f <span class="token operator">=</span> <span class="token function">fdget</span><span class="token punctuation">(</span>insn<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>imm<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        map <span class="token operator">=</span> <span class="token function">__bpf_map_get</span><span class="token punctuation">(</span>f<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        addr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">unsigned</span> <span class="token keyword">long</span><span class="token punctuation">)</span>map<span class="token punctuation">;</span>
+        insn<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>imm <span class="token operator">=</span> <span class="token punctuation">(</span>u32<span class="token punctuation">)</span>addr<span class="token punctuation">;</span>
+        insn<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>imm <span class="token operator">=</span> addr <span class="token operator">>></span> <span class="token number">32</span><span class="token punctuation">;</span>
+</code></pre>
+<p>Function <code>convert_pseudo_ld_imm64()</code> resets the <code>src</code> field of the
+instruction:</p>
+<pre class="language-c"><code class="language-c">        <span class="token keyword">if</span> <span class="token punctuation">(</span>insn<span class="token operator">-></span>code <span class="token operator">==</span> <span class="token punctuation">(</span>BPF_LD <span class="token operator">|</span> BPF_IMM <span class="token operator">|</span> BPF_DW<span class="token punctuation">)</span><span class="token punctuation">)</span>
+                insn<span class="token operator">-></span>src_reg <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+</code></pre>
+<p>Here the map address is <code>0xffff8881384aa200</code>.  The final bpf code is:</p>
+<pre class="language-x"><code class="language-x">        18 01 00 00 00 a2 4a 38 00 00 00 00 81 88 ff ff
+        85 00 00 00 30 86 01 00
+</code></pre>
+<p>So when calling <code>map_lookup_elem()</code> in the bpf code, the first
+argument <code>counter_array</code> is <code>0xffff8881384aa200</code>.</p>
+<h2 id="using-map-address-directly%3F">Using map address directly? <a class="header-anchor" href="#using-map-address-directly%3F" aria-hidden="true">¶</a></h2>
+<p>In the original C code, can we use the map address directly when
+calling <code>map_lookup_elem()</code> as the following?</p>
+<pre class="language-x"><code class="language-x">        val = map_lookup_elem((void*)0xffff8881384aa200, &amp;key);
+</code></pre>
+<p>The answer is no.  Although the code compiles fine and could generate
+the final bpf instructions, the kernel bpf verifier rejects the
+instructions due to the <code>do_check()</code> function as shown in the previous
+call stack.</p>
+<p>Function <code>check_ld_imm()</code> sets the type of the destination
+register(<code>r1</code>):</p>
+<pre class="language-c"><code class="language-c">        <span class="token keyword">if</span> <span class="token punctuation">(</span>insn<span class="token operator">-></span>src_reg <span class="token operator">==</span> BPF_PSEUDO_MAP_FD<span class="token punctuation">)</span>
+                regs<span class="token punctuation">[</span>insn<span class="token operator">-></span>dst_reg<span class="token punctuation">]</span><span class="token punctuation">.</span>type <span class="token operator">=</span> CONST_PTR_TO_MAP<span class="token punctuation">;</span>
+</code></pre>
+<p>Function <code>check_func_arg()</code> is called for the next bpf instruction
+<code>0x85(call imm)</code> .  It checks if arguments of <code>map_lookup_elem()</code> have
+the expected types.  Here the first argument <code>r1</code> should have type
+<code>ARG_CONST_MAP_PTR</code>:</p>
+<pre class="language-c"><code class="language-c">	<span class="token keyword">if</span> <span class="token punctuation">(</span>arg_type <span class="token operator">==</span> ARG_CONST_MAP_PTR<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+		expected_type <span class="token operator">=</span> CONST_PTR_TO_MAP<span class="token punctuation">;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>reg<span class="token operator">-></span>type <span class="token operator">!=</span> expected_type<span class="token punctuation">)</span>
+			<span class="token keyword">goto</span> err_type<span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+</code></pre>
+<p>If we use the real map address in the original C code, this check will
+fail.</p>
+<h2 id="thoughts">Thoughts <a class="header-anchor" href="#thoughts" aria-hidden="true">¶</a></h2>
+<p>The bpf map in the above example must be created before loading the
+bpf program.  There are cases that maps can only be created after the
+bpf program is loaded.  For such cases, we could use maps of type
+<code>BPF_MAP_TYPE_ARRAY_OF_MAPS</code> or <code>BPF_MAP_TYPE_HASH_OF_MAPS</code>.  I'll
+have a follow-up post for this.</p>
+
+  </div>
+</div>
+
+<script data-isso="/comment/" src="/comment/js/embed.min.js"></script>
+<section id="isso-thread"></section>
+
+    </div>
+  </body>
+</html>
