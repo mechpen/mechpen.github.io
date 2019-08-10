@@ -1,5 +1,5 @@
 ---
-title: Linux bpf maps
+title: Linux bpf map internals
 tags: [bpf]
 list: true
 excerpt:
@@ -58,15 +58,15 @@ instruction with the following fields:
 
   - `dst` is 1, which refers to register `r1`.
 
-  - `src` is 0, because it loads immediate values from the
-    instructions.
+  - `src` is 0, because the immediate value is inside the instruction.
 
-  - `imm` is 0, because the value is not yet resolved.
+  - `imm` is 0, because the value of `counter_array` is not yet
+    resolved.
 
-When `tc` loads the object file, it reads the map definition from
+When `tc` loads the object file, it reads the map attributes from
 `counter_array` and calls `bpf()` syscall to create the bpf map.  The
 `bpf()` syscall returns a file descriptor of the map object.  `tc`
-then resolves references to `counter_array` with the file descriptor
+then "resolves" references to `counter_array` with the file descriptor
 as show in the following code snippet in `lib/bpf.c:
 bpf_apply_relo_map()`:
 
@@ -151,7 +151,7 @@ register(`r1`):
 
 Function `check_func_arg()` is called for the next bpf instruction
 `0x85(call imm)` .  It checks if arguments of `map_lookup_elem()` have
-the expected types.  Here the first argument `r1` should have type
+the expected types.  Here the first argument `r1` must have type
 `ARG_CONST_MAP_PTR`:
 
 ```c
@@ -162,8 +162,9 @@ the expected types.  Here the first argument `r1` should have type
 	}
 ```
 
-If we use the real map address in the original C code, this check will
-fail.
+If we use the real map address in the original C code, this type check
+will fail because the `src` field of the `0x18` instruction is 0 and
+thus the type of register `r1` is not set to `CONST_PTR_TO_MAP`.
 
 ## Thoughts
 

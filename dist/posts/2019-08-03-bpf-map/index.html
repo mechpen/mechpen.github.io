@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 
-<title>Linux bpf maps – Mechpen</title>
+<title>Linux bpf map internals – Mechpen</title>
 
 
 <link rel="icon" type="image/png" href="/assets/favicon.png">
@@ -65,7 +65,7 @@
     <div id="main" role="main" class="container">
       
 <div class="post">
-  <h1>Linux bpf maps</h1>
+  <h1>Linux bpf map internals</h1>
 
   <div class="date">
     August  3, 2019
@@ -116,17 +116,17 @@ opcode loads an 64 bits immediate value to a destination register.</p>
 <p><code>dst</code> is 1, which refers to register <code>r1</code>.</p>
 </li>
 <li>
-<p><code>src</code> is 0, because it loads immediate values from the
-instructions.</p>
+<p><code>src</code> is 0, because the immediate value is inside the instruction.</p>
 </li>
 <li>
-<p><code>imm</code> is 0, because the value is not yet resolved.</p>
+<p><code>imm</code> is 0, because the value of <code>counter_array</code> is not yet
+resolved.</p>
 </li>
 </ul>
-<p>When <code>tc</code> loads the object file, it reads the map definition from
+<p>When <code>tc</code> loads the object file, it reads the map attributes from
 <code>counter_array</code> and calls <code>bpf()</code> syscall to create the bpf map.  The
 <code>bpf()</code> syscall returns a file descriptor of the map object.  <code>tc</code>
-then resolves references to <code>counter_array</code> with the file descriptor
+then &quot;resolves&quot; references to <code>counter_array</code> with the file descriptor
 as show in the following code snippet in <code>lib/bpf.c: bpf_apply_relo_map()</code>:</p>
 <pre class="language-c"><code class="language-c">        prog<span class="token operator">-></span>insns<span class="token punctuation">[</span>insn_off<span class="token punctuation">]</span><span class="token punctuation">.</span>src_reg <span class="token operator">=</span> BPF_PSEUDO_MAP_FD<span class="token punctuation">;</span>
         prog<span class="token operator">-></span>insns<span class="token punctuation">[</span>insn_off<span class="token punctuation">]</span><span class="token punctuation">.</span>imm <span class="token operator">=</span> ctx<span class="token operator">-></span>map_fds<span class="token punctuation">[</span>map_idx<span class="token punctuation">]</span><span class="token punctuation">;</span>
@@ -183,7 +183,7 @@ register(<code>r1</code>):</p>
 </code></pre>
 <p>Function <code>check_func_arg()</code> is called for the next bpf instruction
 <code>0x85(call imm)</code> .  It checks if arguments of <code>map_lookup_elem()</code> have
-the expected types.  Here the first argument <code>r1</code> should have type
+the expected types.  Here the first argument <code>r1</code> must have type
 <code>ARG_CONST_MAP_PTR</code>:</p>
 <pre class="language-c"><code class="language-c">	<span class="token keyword">if</span> <span class="token punctuation">(</span>arg_type <span class="token operator">==</span> ARG_CONST_MAP_PTR<span class="token punctuation">)</span> <span class="token punctuation">{</span>
 		expected_type <span class="token operator">=</span> CONST_PTR_TO_MAP<span class="token punctuation">;</span>
@@ -191,8 +191,9 @@ the expected types.  Here the first argument <code>r1</code> should have type
 			<span class="token keyword">goto</span> err_type<span class="token punctuation">;</span>
 	<span class="token punctuation">}</span>
 </code></pre>
-<p>If we use the real map address in the original C code, this check will
-fail.</p>
+<p>If we use the real map address in the original C code, this type check
+will fail because the <code>src</code> field of the <code>0x18</code> instruction is 0 and
+thus the type of register <code>r1</code> is not set to <code>CONST_PTR_TO_MAP</code>.</p>
 <h2 id="thoughts">Thoughts <a class="header-anchor" href="#thoughts" aria-hidden="true">¶</a></h2>
 <p>The bpf map in the above example must be created before loading the
 bpf program.  There are cases that maps can only be created after the
