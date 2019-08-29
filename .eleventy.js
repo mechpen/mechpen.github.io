@@ -18,6 +18,9 @@ module.exports = function(eleventyConfig) {
       "css",
       "png",
       "pdf",
+      "c",
+      "h",
+      "s",
     ],
   }
 
