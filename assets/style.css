@@ -215,3 +215,10 @@ section#isso-thread a:hover {
 section#isso-thread a.author {
   color: var(--name-color);
 }
+
+/*************/
+/* KATEX FIX */
+/*************/
+.katex {
+  font-size: 1.1em;
+}
