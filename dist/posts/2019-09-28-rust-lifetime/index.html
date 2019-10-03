@@ -220,6 +220,27 @@ from the struct reference rule: <code>'a: 'b</code> and <code>'c: 'd</code>.</p>
     s
 <span class="token punctuation">}</span>
 </code></pre>
+<h2 id="static-lifetime-and-runtime-lifetime">Static lifetime and runtime lifetime <a class="header-anchor" href="#static-lifetime-and-runtime-lifetime" aria-hidden="true">¶</a></h2>
+<p>Rust scopes and lifetimes are static lexical constructs.  They are
+used to emulate lifetimes of memory objects at runtime.  However,
+static lifetimes could be different to runtime lifetimes, as shown in
+the following example:</p>
+<pre class="language-rust"><code class="language-rust"><span class="token attribute attr-name">#[derive(Debug)]</span>
+<span class="token keyword">struct</span> S <span class="token punctuation">{</span><span class="token punctuation">}</span>
+
+<span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> x <span class="token operator">=</span> S <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> y <span class="token operator">=</span> <span class="token operator">&amp;</span>x<span class="token punctuation">;</span>
+    <span class="token keyword">let</span> z <span class="token operator">=</span> x<span class="token punctuation">;</span>
+    <span class="token function">println!</span><span class="token punctuation">(</span><span class="token string">"{:?}"</span><span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>An instance of struct <code>S</code> is first bound to <code>x</code>, then moved to <code>z</code>.
+The runtime lifetime of the instance spans the whole function
+invocation.  But the scope of <code>x</code> ends when <code>x</code> is moved to <code>z</code>.  Any
+lifetime associated with y could not be satisfied because
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>c</mi><mi>o</mi><mi>p</mi><mi>e</mi><mo>(</mo><mtext><mi mathvariant="normal">y</mi></mtext><mo>)</mo><mo>⊈</mo><mi>s</mi><mi>c</mi><mi>o</mi><mi>p</mi><mi>e</mi><mo>(</mo><mtext><mi mathvariant="normal">x</mi></mtext><mo>)</mo></mrow><annotation encoding="application/x-tex">scope(\text{y})\nsubseteq scope(\text{x})</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="strut" style="height:0.79383em;"></span><span class="strut bottom" style="height:1.09657em;vertical-align:-0.30274em;"></span><span class="base textstyle uncramped"><span class="mord mathit">s</span><span class="mord mathit">c</span><span class="mord mathit">o</span><span class="mord mathit">p</span><span class="mord mathit">e</span><span class="mopen">(</span><span class="text mord textstyle uncramped"><span class="mord mathrm" style="margin-right:0.01389em;">y</span></span><span class="mclose">)</span><span class="mrel amsrm">⊈</span><span class="mord mathit">s</span><span class="mord mathit">c</span><span class="mord mathit">o</span><span class="mord mathit">p</span><span class="mord mathit">e</span><span class="mopen">(</span><span class="text mord textstyle uncramped"><span class="mord mathrm">x</span></span><span class="mclose">)</span></span></span></span>.  Thus the code does not
+compile.</p>
 <h2 id="thoughts">Thoughts <a class="header-anchor" href="#thoughts" aria-hidden="true">¶</a></h2>
 <p>In the above, we did not consider mutable variables and references.
 Lifetime rules associated with mutable references are not

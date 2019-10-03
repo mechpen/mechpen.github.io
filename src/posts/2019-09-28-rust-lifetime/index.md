@@ -184,6 +184,32 @@ fn foo<'a, 'b, 'c, 'd>(s: &'b S<'a>) -> &'d S<'c> where 'a: 'c, 'b: 'd {
 }
 ```
 
+## Static lifetime and runtime lifetime
+
+Rust scopes and lifetimes are static lexical constructs.  They are
+used to emulate lifetimes of memory objects at runtime.  However,
+static lifetimes could be different to runtime lifetimes, as shown in
+the following example:
+
+```rust
+#[derive(Debug)]
+struct S {}
+
+fn main() {
+    let x = S {};
+    let y = &x;
+    let z = x;
+    println!("{:?}", y);
+}
+```
+
+An instance of struct `S` is first bound to `x`, then moved to `z`.
+The runtime lifetime of the instance spans the whole function
+invocation.  But the scope of `x` ends when `x` is moved to `z`.  Any
+lifetime associated with y could not be satisfied because
+$scope(\text{y})\nsubseteq scope(\text{x})$.  Thus the code does not
+compile.
+
 ## Thoughts
 
 In the above, we did not consider mutable variables and references.
