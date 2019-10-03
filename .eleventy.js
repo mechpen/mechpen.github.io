@@ -24,6 +24,8 @@ module.exports = function(eleventyConfig) {
     ],
   }
 
+  eleventyConfig.setDataDeepMerge(true);
+
   var md = require("markdown-it")({
     html: true,
     linkify: true,
@@ -33,7 +35,9 @@ module.exports = function(eleventyConfig) {
     permalink: true,
   })
   .use(require('markdown-it-prism'))
+  .use(require('markdown-it-katex'))
   eleventyConfig.setLibrary("md", md)
+//  .use(require('markdown-it-texmath').use(require('katex')))
 
   var findFile = function(name, scope) {
     var inputPath = scope.contexts[0].page.inputPath
