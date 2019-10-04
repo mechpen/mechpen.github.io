@@ -187,9 +187,9 @@ fn foo<'a, 'b, 'c, 'd>(s: &'b S<'a>) -> &'d S<'c> where 'a: 'c, 'b: 'd {
 ## Static lifetime and runtime lifetime
 
 Rust scopes and lifetimes are static lexical constructs.  They are
-used to emulate lifetimes of memory objects at runtime.  However,
-static lifetimes could be different to runtime lifetimes, as shown in
-the following example:
+used to emulate lifetimes of data objects at runtime.  However, static
+lifetimes could be different to runtime lifetimes, as shown in the
+following example:
 
 ```rust
 #[derive(Debug)]

@@ -222,9 +222,9 @@ from the struct reference rule: <code>'a: 'b</code> and <code>'c: 'd</code>.</p>
 </code></pre>
 <h2 id="static-lifetime-and-runtime-lifetime">Static lifetime and runtime lifetime <a class="header-anchor" href="#static-lifetime-and-runtime-lifetime" aria-hidden="true">¶</a></h2>
 <p>Rust scopes and lifetimes are static lexical constructs.  They are
-used to emulate lifetimes of memory objects at runtime.  However,
-static lifetimes could be different to runtime lifetimes, as shown in
-the following example:</p>
+used to emulate lifetimes of data objects at runtime.  However, static
+lifetimes could be different to runtime lifetimes, as shown in the
+following example:</p>
 <pre class="language-rust"><code class="language-rust"><span class="token attribute attr-name">#[derive(Debug)]</span>
 <span class="token keyword">struct</span> S <span class="token punctuation">{</span><span class="token punctuation">}</span>
 
