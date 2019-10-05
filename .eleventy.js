@@ -37,7 +37,6 @@ module.exports = function(eleventyConfig) {
   .use(require('markdown-it-prism'))
   .use(require('markdown-it-katex'))
   eleventyConfig.setLibrary("md", md)
-//  .use(require('markdown-it-texmath').use(require('katex')))
 
   var findFile = function(name, scope) {
     var inputPath = scope.contexts[0].page.inputPath

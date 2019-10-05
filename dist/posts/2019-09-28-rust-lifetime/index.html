@@ -43,6 +43,8 @@
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet" />
     
+    <link href="style.css" rel="stylesheet" />
+    
     <link href="/assets/style.css" rel="stylesheet" />
   </head>
 
@@ -157,6 +159,7 @@ code segments that are mapped to the process memory.</p>
 <h3 id="example-1">Example 1 <a class="header-anchor" href="#example-1" aria-hidden="true">¶</a></h3>
 <p>The first simple example is from the
 <a href="https://doc.rust-lang.org/stable/book/ch10-03-lifetime-syntax.html#preventing-dangling-references-with-lifetimes">rust book</a>.</p>
+<div class="badcode"></div>
 <pre class="language-rust"><code class="language-rust"><span class="token punctuation">{</span>
     <span class="token keyword">let</span> r<span class="token punctuation">;</span>
 
@@ -225,6 +228,7 @@ from the struct reference rule: <code>'a: 'b</code> and <code>'c: 'd</code>.</p>
 used to emulate lifetimes of data objects at runtime.  However, static
 lifetimes could be different to runtime lifetimes, as shown in the
 following example:</p>
+<div class="badcode"></div>
 <pre class="language-rust"><code class="language-rust"><span class="token attribute attr-name">#[derive(Debug)]</span>
 <span class="token keyword">struct</span> S <span class="token punctuation">{</span><span class="token punctuation">}</span>
 

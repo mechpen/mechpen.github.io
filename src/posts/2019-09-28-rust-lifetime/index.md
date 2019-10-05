@@ -4,6 +4,7 @@ tags: [rust]
 list: true
 styles:
 - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css
+- style.css
 excerpt: |
 
   Rust ownership and lifetime are very powerful tools.  They were
@@ -105,6 +106,8 @@ There are also some special lifetime expressions:
 The first simple example is from the
 [rust book](https://doc.rust-lang.org/stable/book/ch10-03-lifetime-syntax.html#preventing-dangling-references-with-lifetimes).
 
+<div class="badcode"></div>
+
 ```rust
 {
     let r;
@@ -190,6 +193,8 @@ Rust scopes and lifetimes are static lexical constructs.  They are
 used to emulate lifetimes of data objects at runtime.  However, static
 lifetimes could be different to runtime lifetimes, as shown in the
 following example:
+
+<div class="badcode"></div>
 
 ```rust
 #[derive(Debug)]
