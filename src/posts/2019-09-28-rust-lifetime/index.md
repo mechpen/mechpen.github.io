@@ -1,5 +1,5 @@
 ---
-title: Understanding Rust lifetime
+title: Mis-Understanding Rust lifetime
 tags: [rust]
 list: true
 styles:
@@ -15,6 +15,14 @@ excerpt: |
   compiler code so I could be wrong.
 
 ---
+
+**Update** [Oct/20]: Prepend "**Mis-**" to the title as the theories
+in this post are wrong.  Rust treats lifetimes as types, and converts
+lifetimes according to the [subtyping
+rules](https://doc.rust-lang.org/nomicon/subtyping.html#variance).
+Every reference has a lifetime as its type.  This [follow up
+post](/posts/2019-10-20-rust-lifetime-mut/) has correct explanation of
+rust lifetime.
 
 ## Lifetime, who's lifetime
 
@@ -53,7 +61,7 @@ the implied algebraic relations.
    A lifetime associated with a reference is a subset of the scope of
    the referent object.
 
-3. Assignment rule;
+3. Assignment rule:
 
    $\quad$`x: &'a S = y: &'b T` $\;\Rightarrow\;\text{'a}\subseteq\text{'b}$
 
@@ -163,12 +171,13 @@ In this example, lifetime `'a` is associated with both `rs1` and
 `rs2`.  The compiler needs to find a lifetime `'a` that satisfies:
 
 $\quad\begin{aligned}
-scope(\text{rs1})\subseteq\text{'a}\subseteq scope(\text{s1})\\
-scope(\text{rs2})\subseteq\text{'a}\subseteq scope(\text{s2})
+&scope(\text{rs1})\subseteq\text{'a}\subseteq scope(\text{s1})&\\
+&scope(\text{rs2})\subseteq\text{'a}\subseteq scope(\text{s2})&\\
+&scope(\text{result})\subseteq\text{'a}&
 \end{aligned}$
 
-$scope(\text{s2})$ satisfies these inequalities, so `'a` could be
-$scope(\text{s2})$, and the compiler passes the check.
+$scope(\text{result})$ satisfies these inequalities, so `'a` could be
+$scope(\text{result})$, and the compiler passes the check.
 
 ### Example 3
 

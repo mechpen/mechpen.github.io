@@ -1,0 +1,7 @@
+.badcode + .language-rust {
+  background: #f5e2e0;
+}
+
+.badcode + .language-rust  .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
+  background: #f5e2e0;
+}

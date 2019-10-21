@@ -10,7 +10,6 @@ NAT
 
 When there’s no free port available, the packet could be dropped.
 
-
 does not exist is not error, and vice vesa
 
 - istio cert

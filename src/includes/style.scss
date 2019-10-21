@@ -2,7 +2,7 @@
 /* THEME COLORS */
 /****************/
 
-$blue: #4183C4;
+$blue: #0000CC;
 $black: #000;
 $white: #fff;
 $gray: #666;
@@ -115,6 +115,11 @@ a {
 code {
   font-size: 0.9em;
   background: var(--note-background-color);
+}
+
+code:not([class]) {
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 ::-moz-selection {
