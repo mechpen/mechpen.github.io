@@ -3,6 +3,7 @@
 /****************/
 
 $blue: #0000CC;
+$lightblue: #7777FF;
 $black: #000;
 $white: #fff;
 $gray: #666;
@@ -27,7 +28,7 @@ $darkerGray: #222;
 }
 
 [theme="dark"] {
-  #{--link-color}: $blue;
+  #{--link-color}: $lightblue;
   #{--nav-color}: $lightGray;
   #{--name-color}: $lightGray;
   #{--main-background-color}: $darkerGray;

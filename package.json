@@ -2,7 +2,7 @@
   "scripts": {
     "build": "npx eleventy",
     "serve": "npx eleventy --serve",
-    "release": "rsync dist/ mechpen.net:/www/mechpen.net/ -vaz"
+    "release": "git subtree push --prefix dist origin master"
   },
   "devDependencies": {
     "@11ty/eleventy": "git+https://github.com/mechpen/eleventy.git",
