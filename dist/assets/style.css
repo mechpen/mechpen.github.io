@@ -8,7 +8,7 @@
   --main-background-color: #fff;
   --main-text-color: #000;
   --select-background-color: #aaa;
-  --border-bottom-color: #aaa;
+  --border-color: #aaa;
   --date-color: #333;
   --note-background-color: #eee;
 }
@@ -23,7 +23,7 @@
   --main-background-color: #222;
   --main-text-color: #eee;
   --select-background-color: #aaa;
-  --border-bottom-color: #666;
+  --border-color: #666;
   --date-color: #666;
   --note-background-color: #333;
 }
@@ -109,6 +109,24 @@ code:not([class]) {
   padding-right: 5px;
 }
 
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8em;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #f2f2f2;
+}
+
 ::-moz-selection {
   background: var(--select-background-color);
 }
@@ -134,7 +152,7 @@ code:not([class]) {
   padding: 8px 0;
   border-bottom-width: 1px;
   border-bottom-style: solid;
-  border-bottom-color: var(--border-bottom-color);
+  border-bottom-color: var(--border-color);
   display: flex;
 }
 
@@ -169,7 +187,7 @@ nav a {
   padding-bottom: 1em;
   border-bottom-width: 1px;
   border-bottom-style: solid;
-  border-bottom-color: var(--border-bottom-color);
+  border-bottom-color: var(--border-color);
 }
 
 .posts > .post:last-child {

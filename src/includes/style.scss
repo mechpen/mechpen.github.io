@@ -19,7 +19,7 @@ $darkerGray: #222;
   #{--main-background-color}: $white;
   #{--main-text-color}: $black;
   #{--select-background-color}: $lightGray;
-  #{--border-bottom-color}: $lightGray;
+  #{--border-color}: $lightGray;
   #{--date-color}: $darkGray;
   #{--note-background-color}: $lighterGray;
   #light-mode {
@@ -34,7 +34,7 @@ $darkerGray: #222;
   #{--main-background-color}: $darkerGray;
   #{--main-text-color}: $lighterGray;
   #{--select-background-color}: $lightGray;
-  #{--border-bottom-color}: $gray;
+  #{--border-color}: $gray;
   #{--date-color}: $gray;
   #{--note-background-color}: $darkGray;
   #dark-mode {
@@ -123,6 +123,26 @@ code:not([class]) {
   padding-right: 5px;
 }
 
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8em;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+}
+
+tbody {
+  tr:nth-child(odd) {
+    background-color: #f2f2f2;
+  }
+}
+
 ::-moz-selection {
   background: var(--select-background-color);
 }
@@ -150,7 +170,7 @@ code:not([class]) {
   padding: 8px 0;
   border-bottom-width: 1px;
   border-bottom-style: solid;
-  border-bottom-color: var(--border-bottom-color);
+  border-bottom-color: var(--border-color);
   display: flex;
 }
 
@@ -187,7 +207,7 @@ nav {
   padding-bottom: 1em;
   border-bottom-width: 1px;
   border-bottom-style: solid;
-  border-bottom-color: var(--border-bottom-color);
+  border-bottom-color: var(--border-color);
 }
 
 .posts > .post:last-child {

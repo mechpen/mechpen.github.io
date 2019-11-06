@@ -84,7 +84,7 @@ summary of my current understandings.
     <h2 id="basic-rules">Basic rules <a class="header-anchor" href="#basic-rules" aria-hidden="true">¶</a></h2>
 <p><strong>Immutable rule:</strong> <em>Within the lifetime of an immutable reference to
 a variable, the variable can only be used as immutable references.</em></p>
-<p>A simple example:</p>
+<p>Examples:</p>
 <pre class="language-rust"><code class="language-rust"><span class="token keyword">struct</span> S<span class="token punctuation">{</span><span class="token punctuation">}</span>
 
 <span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -117,7 +117,7 @@ an immutable reference.</p>
 <code>ry</code>, the function call <code>foo(&amp;x)</code> creates a immutable reference of <code>x</code>
 which shares the same lifetime <code>'a</code> with reference <code>ry</code>.</p>
 <p><strong>Mutable rule:</strong> <em>A mutable reference is equivalent to a temporary move.</em></p>
-<p>An example:</p>
+<p>Examples:</p>
 <pre class="language-rust"><code class="language-rust"><span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token keyword">let</span> <span class="token keyword">mut</span> x <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
     <span class="token keyword">let</span> rx <span class="token operator">=</span> <span class="token operator">&amp;</span>x<span class="token punctuation">;</span>

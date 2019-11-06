@@ -18,7 +18,7 @@ excerpt: |
 **Immutable rule:** *Within the lifetime of an immutable reference to
 a variable, the variable can only be used as immutable references.*
 
-A simple example:
+Examples:
 
 ```rust
 struct S{}
@@ -60,7 +60,7 @@ which shares the same lifetime `'a` with reference `ry`.
 
 **Mutable rule:** *A mutable reference is equivalent to a temporary move.*
 
-An example:
+Examples:
 
 ```rust
 fn main() {
