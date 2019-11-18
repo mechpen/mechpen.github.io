@@ -8,7 +8,7 @@ excerpt: |
   timeouts.  One workaround for network timeout errors is to duplicate
   a request and send them to different backend servers, then take the
   earliest response.  On the other hand, TCP/IP provides plenty of
-  error feedbacks.  If we uses these feedbacks properly, we could get
+  error feedbacks.  If we use these feedbacks properly, we could get
   rid of many network timeouts.
 
 ---
@@ -21,8 +21,8 @@ For a simple HTTP request, 3 typical network timeouts could happen:
 
 - Timeout after TCP connection is established
 
-All network timeouts indicate that some feedback information is lost.
-If the feedback signals could propagate back to an application, the
+All network timeouts indicate loss of error feedback information.  If
+the error feedback information propagates back to an application, the
 application can take immediate actions without waiting for the timeout
 to happen.
 

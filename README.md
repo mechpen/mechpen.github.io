@@ -1,1 +1,1 @@
-Source for https://mechpen.net, built with [11ty](https://www.11ty.io/).
+My blog site, built with [11ty](https://www.11ty.io/).
