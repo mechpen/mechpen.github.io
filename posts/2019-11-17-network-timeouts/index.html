@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Network timeouts – Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+
+    <script type="text/javascript">
+
+  var currentTheme = localStorage.getItem('theme')
+
+  function setTheme(theme) {
+    if (theme === "dark") {
+      document.documentElement.setAttribute('theme', 'dark')
+    } else {
+      document.documentElement.setAttribute('theme', 'light')
+    }
+  }
+  setTheme(currentTheme)
+
+  function switchTheme() {
+    if (currentTheme == "dark") {
+      currentTheme = ""
+    } else {
+      currentTheme = "dark"
+    }
+    localStorage.setItem('theme', currentTheme)
+    setTheme(currentTheme)
+  }
+
+</script>
+
+    
+    
+    <link href="/assets/prism.css" rel="stylesheet" />
+    
+    <link href="/assets/style.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+            <a id="light-mode" onclick="switchTheme()">light mode</a>
+            <a id="dark-mode" onclick="switchTheme()">dark mode</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      
+<div class="post">
+  <h1>Network timeouts</h1>
+
+  <div class="date">
+    November 17, 2019
+  </div>
+
+  <div class="entry">
+    <p>
+Many changes in distributed systems could causes network related
+timeouts.  One workaround for network timeout errors is to duplicate
+a request and send them to different backend servers, then take the
+earliest response.  On the other hand, TCP/IP provides plenty of
+error feedbacks.  If we uses these feedbacks properly, we could get
+rid of many network timeouts.
+</p>
+    <p>For a simple HTTP request, 3 typical network timeouts could happen:</p>
+<ul>
+<li>
+<p>DNS lookup timeout</p>
+</li>
+<li>
+<p>TCP connection timeout</p>
+</li>
+<li>
+<p>Timeout after TCP connection is established</p>
+</li>
+</ul>
+<p>All network timeouts indicate that some feedback information is lost.
+If the feedback signals could propagate back to an application, the
+application can take immediate actions without waiting for the timeout
+to happen.</p>
+<p>In this post, we first examine different error feedback signals, then
+look into each of the above 3 types of timeouts.</p>
+<p>We need to pay special attention to the 3rd type of timeouts because
+it is more likely to be ignored.  For example,
+<a href="https://grpc.io/">gRPC</a> does not handle this type of timeout error
+properly with its default configuration.  When the error happens, it
+could take gRPC more than 13 minutes to reset a connection.</p>
+<h2 id="1.-network-error-feedbacks">1. Network error feedbacks <a class="header-anchor" href="#1.-network-error-feedbacks" aria-hidden="true">¶</a></h2>
+<p>Many network problems have feedback signals in the form of TCP control
+flags or ICMP messages.</p>
+<h3 id="1.1.-tcp-rst">1.1. TCP <code>RST</code> <a class="header-anchor" href="#1.1.-tcp-rst" aria-hidden="true">¶</a></h3>
+<p>A host replies a <code>RST</code> packet when it receives an invalid TCP packet.
+For example, when a <code>SYN</code> is received on a closed port, or when an
+<code>ACK</code> is received without proper handshake.  In most real-life cases,
+<code>RST</code> packets are received when the remote host is up, but the remote
+server process is down.</p>
+<p>Depending on TCP states, different error values are returned to
+applications when <code>RST</code> message is received, as shown in the following
+<a href="https://github.com/torvalds/linux/blob/e292f05e0df73f9fcc93329663936e1ded97a988/net/ipv4/tcp_input.c#L4109-L4120">kernel code
+snippet</a>:</p>
+<pre class="language-c"><code class="language-c">	<span class="token keyword">switch</span> <span class="token punctuation">(</span>sk<span class="token operator">-></span>sk_state<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">case</span> TCP_SYN_SENT<span class="token operator">:</span>
+		sk<span class="token operator">-></span>sk_err <span class="token operator">=</span> ECONNREFUSED<span class="token punctuation">;</span>
+		<span class="token keyword">break</span><span class="token punctuation">;</span>
+	<span class="token keyword">case</span> TCP_CLOSE_WAIT<span class="token operator">:</span>
+		sk<span class="token operator">-></span>sk_err <span class="token operator">=</span> EPIPE<span class="token punctuation">;</span>
+		<span class="token keyword">break</span><span class="token punctuation">;</span>
+	<span class="token keyword">case</span> TCP_CLOSE<span class="token operator">:</span>
+		<span class="token keyword">return</span><span class="token punctuation">;</span>
+	<span class="token keyword">default</span><span class="token operator">:</span>
+		sk<span class="token operator">-></span>sk_err <span class="token operator">=</span> ECONNRESET<span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+</code></pre>
+<p>The <code>connect()</code> syscall returns <code>ECONNREFUSED</code>.  The <code>send()</code> and
+<code>recv()</code> syscalls could return <code>ECONNRESET</code> or <code>EPIPE</code>.</p>
+<h3 id="1.2.-tcp-fin">1.2. TCP <code>FIN</code> <a class="header-anchor" href="#1.2.-tcp-fin" aria-hidden="true">¶</a></h3>
+<p><code>FIN</code> messages do not indicate errors.  A TCP endpoint sends <code>FIN</code>
+messages when it closes the connection.</p>
+<p>When a TCP endpoint receives a <code>FIN</code> message from its remote peer, the
+TCP connection enters <code>CLOSE_WAIT</code> state, also known as &quot;half closed
+state&quot;.  All <code>recv()</code> syscall returns 0 which indicates EOF, and the
+endpoint should close the connection.</p>
+<p>If the endpoint does not close the connection, it could still calls
+<code>send()</code> syscall, the <code>send()</code> may succeed and data packets are sent
+to the remote peer.  Then what happens depends on whether the remote
+host is up:</p>
+<ul>
+<li>
+<p>If the remote host is up, it replies a <code>RST</code> message, causing the
+sender's <code>send()</code> syscalls to return <code>EPIPE</code>,</p>
+</li>
+<li>
+<p>If the remote host is down, the sender may receive no feedback
+(assuming no ICMP).  The sender then retransmits packets and
+eventually times out.  The retransmission timeout is described in
+the <a href="#3.3.-tcp-established-timeout">following section</a>.</p>
+</li>
+</ul>
+<h3 id="1.3.-icmp-dest_unreach">1.3. ICMP <code>DEST_UNREACH</code> <a class="header-anchor" href="#1.3.-icmp-dest_unreach" aria-hidden="true">¶</a></h3>
+<p>ICMP <code>DEST_UNREACH</code> messages cover many types of network problems.
+They could be generated by the remote endpoint as well as any
+intermediate router.  The following table summarizes how kernel
+handles some <code>DEST_UNREACH</code> messages and the return values of related
+syscalls.</p>
+<p><a name="icmp"></a></p>
+<table>
+<thead>
+<tr>
+<th>ICMP code</th>
+<th>UDP sendto</th>
+<th>UDP connected send</th>
+<th>TCP connect</th>
+<th>TCP send/recv</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NET_UNREACH</td>
+<td>no error</td>
+<td>no error</td>
+<td>ENETUNREACH</td>
+<td>retry</td>
+</tr>
+<tr>
+<td>HOST_UNREACH</td>
+<td>no error</td>
+<td>no error</td>
+<td>EHOSTUNREACH</td>
+<td>retry</td>
+</tr>
+<tr>
+<td>PORT_UNREACH</td>
+<td>no error</td>
+<td>ECONNREFUSED</td>
+<td>ECONNREFUSED</td>
+<td>retry</td>
+</tr>
+<tr>
+<td>PKT_FILTERED</td>
+<td>no error</td>
+<td>EHOSTUNREACH</td>
+<td>EHOSTUNREACH</td>
+<td>retry</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>NET_UNREACH</code> message is normally generated by a router when it
+cannot find a route to the destination.</p>
+<p>The <code>HOST_UNREACH</code> message is generated by a router when it cannot
+resolve the next hop MAC address via ARP.  Normally 3 ARP requests are
+sent in 3 seconds.  If no ARP response is received, the router returns
+<code>HOST_UNREACH</code>.</p>
+<p>The <code>PORT_UNREACH</code> message is generated by the remote endpoint for UDP
+when the port is not open.  For TCP, <code>RST</code> is generated instead of
+<code>PORT_UNREACH</code> when the port is not open.</p>
+<p>The <code>PKT_FILTERED</code> error is &quot;<a href="http://www.networksorcery.com/enp/protocol/icmp/msg3.htm">Communication Administratively
+Prohibited</a>&quot;,
+it is generated &quot;if a router cannot forward a packet due to
+administrative filtering&quot;.</p>
+<p>These ICMP messages could also be generated with <code>ip route</code> command or
+<code>iptables</code> command.  For example both the following commands could
+generate <code>PKT_FILTERED</code> messages for a destination.</p>
+<pre class="language-x"><code class="language-x"># ip route add prohibit &lt;dest&gt;
+# iptables -I FORWARD -d &lt;dest&gt; -j REJECT --reject-with icmp-admin-prohibited
+</code></pre>
+<p>For UDP, unconnected sockets ignore all ICMP errors.  Connected
+sockets forwards &quot;hard&quot; ICMP errors to applications.  The
+<code>NET_UNREACH</code> and <code>HOST_UNREACH</code> errors are transient (soft) errors,
+and are not forwarded to applications according to <a href="https://tools.ietf.org/html/rfc1122.html#page-39">RFC 1122 section
+3.2.2.1</a>.  The other
+2 errors are hard errors, thus are forwarded to applications.</p>
+<p>For TCP, the <code>connect()</code> syscall reports all ICMP errors.  After a
+connection is established, TCP does not report ICMP errors to
+applications anymore.  Instead TCP keeps retrying until retransmission
+times out (&gt;13 mins).  If all retries fail, the <code>send()</code> or <code>recv()</code>
+syscall returns the same error as what <code>connect()</code> returns.  The
+reason that TCP does not immediately notify applications of ICMP
+errors is for counteracting ICMP attacks.  Details of the ICMP attacks
+are described in <a href="https://tools.ietf.org/html/rfc5927">RFC 5927</a>.</p>
+<p>For both UDP and TCP, if the socket option <code>IP_RECVERR</code> is enabled,
+then all ICMP errors are propagated to the user application.</p>
+<h2 id="2.-information-loss">2. Information loss <a class="header-anchor" href="#2.-information-loss" aria-hidden="true">¶</a></h2>
+<p>As shown in the previous section, information could get lost in the
+kernel TCP stack.  Unless the socket option <code>IP_RECVERR</code> is enabled,
+many ICMP messages are consumed by the kernel without notifying
+applications.</p>
+<p>Another cause of information loss is packet drops.  IP network is
+lossy.  Any packet could be dropped.  Additionally, firewalls could be
+configured to drop ICMP messages for security concerns.</p>
+<p>When NAT is used, ICMP messages are translated and returned to the
+original sender transparently.</p>
+<p>When tunneling is used, ICMP messages may get dropped depending on the
+tunnel implementation.  For example, IP-IP tunnel should return ICMP
+messages to the original sender according to <a href="https://tools.ietf.org/html/rfc2003#section-4">RFC
+2003</a>.  However, Linux
+does not convert and return ICMP messages generated within the tunnel.</p>
+<p>There are also network errors that do not generate feedback signal at
+all.  For example, when SNAT cannot allocate a new port for a
+connection due to conflicts, the <code>SYN</code> packet is silently dropped.
+More details of this error can be found at
+<a href="https://tech.xing.com/a-reason-for-unexplained-connection-timeouts-on-kubernetes-docker-abd041cf7e02">here</a>.</p>
+<h2 id="3.-timeouts">3. Timeouts <a class="header-anchor" href="#3.-timeouts" aria-hidden="true">¶</a></h2>
+<p>In general, applications could (and should) always enforce timeouts by
+canceling an operation after waiting for some time without getting a
+response.  If an application does not enforce timeouts, the lower
+layers, i.e. glibc and kernel, have some default timeouts.  The
+following table summarizes the default durations of different types of
+timeouts:</p>
+<table>
+<thead>
+<tr>
+<th>type</th>
+<th>duration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DNS lookup timeout</td>
+<td>10 * number of nameservers</td>
+</tr>
+<tr>
+<td>TCP connection timeout</td>
+<td>127 seconds</td>
+</tr>
+<tr>
+<td>TCP idle timeout w/o keepalive</td>
+<td>infinity</td>
+</tr>
+<tr>
+<td>TCP idle timeout with keepalive</td>
+<td>&gt; 2 hours</td>
+</tr>
+<tr>
+<td>TCP retransmission timeout</td>
+<td>13 to 60 minutes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3.1.-dns-lookup-timeout">3.1. DNS lookup timeout <a class="header-anchor" href="#3.1.-dns-lookup-timeout" aria-hidden="true">¶</a></h3>
+<p>The DNS queries are normally sent by a glibc function <code>res_send()</code>,
+which sends queries in UDP packets to nameservers.  Function
+<code>res_send()</code> implements timeout limits for the DNS queries.  The
+timeout duration is approximately 10 seconds multiplied by the number
+of nameservers defined in the file <code>/etc/resolv.conf</code>.  This <a href="/posts/2019-07-18-resolv-conf/">blog
+post</a> has some related details.</p>
+<p>The glibc function <code>res_send()</code> uses connected UDP socket with socket
+option <code>IP_RECVERR</code> enabled.  A related ICMP error message makes a DNS
+query abort immediately.  So to avoid DNS lookup timeout, we should
+make sure to generate ICMP <code>DEST_UNREACH</code> messages for invalid DNS
+packets.</p>
+<h3 id="3.2.-tcp-connection-timeout">3.2. TCP connection timeout <a class="header-anchor" href="#3.2.-tcp-connection-timeout" aria-hidden="true">¶</a></h3>
+<p>An application calls <code>connect()</code> syscall to start a TCP 3-way
+handshake.  The kernel TCP stack sends <code>SYN</code> packets and waits for a
+<code>SYN-ACK</code> packet from the remote peer to complete the handshake.  If
+no <code>SYN-ACK</code> packet is received, the TCP stack retransmits <code>SYN</code>
+packets with exponential back-off.  After a few retries, <code>connect()</code>
+gives up and returns <code>ETIMEDOUT</code>.</p>
+<p>The number of SYN retries can be configured with sysctl parameter
+<code>net.ipv4.tcp_syn_retries</code>, or socket option <code>TCP_SYNCNT</code>.  The
+default retry number is 6.  Plus the original one, 7 <code>SYN</code> packets are
+sent before the connection is aborted.  The initial retransmission
+timeout (rto) is 1 second, so the default connection timeout period is
+127 seconds.</p>
+<p>The connection timeout happens when the <code>SYN</code>, <code>SYN-ACK</code> or ICMP error
+messages are dropped in the network.</p>
+<p>The remote peer could also drop <code>SYN</code> packets if the socket backlog
+queue is full.  The number of dropped <code>SYN</code> packets can be shown with
+the following command:</p>
+<pre class="language-x"><code class="language-x">$ netstat -s | grep -i listen
+    21 times the listen queue of a socket overflowed
+    21 SYNs to LISTEN sockets dropped
+</code></pre>
+<h3 id="3.3.-tcp-established-timeout">3.3. TCP established timeout <a class="header-anchor" href="#3.3.-tcp-established-timeout" aria-hidden="true">¶</a></h3>
+<p>When a TCP connection is idle, i.e. there is no outstanding data to
+transmit, the kernel TCP stack does nothing by default.  If an
+application only receive data from a TCP socket, the <code>recv()</code> call
+could block forever without noticing network connection errors.</p>
+<p>If the socket option <code>SO_KEEPALIVE</code> is enabled, the kernel TCP stack
+sends &quot;keepalive&quot; probes (<code>ACK</code> messages) when the connection is idle.
+However, it takes more than 2 hours for the keepalive probes to detect
+a dead connection.  More details of the keepalive probes can be found
+at the <a href="https://linux.die.net/man/7/tcp">TCP man page</a>.</p>
+<p>When there are outstanding packets to send, a host retransmit packets
+if no <code>ACK</code> is received.  The retransmission happens regardless of
+whether the host receives any ICMP error messages or not, as shown in
+the <a href="#1.3.-icmp-dest_unreach">previous section</a>.</p>
+<p>The default number of retransmission is 15, which can be changed via
+the sysctl parameter <code>net.ipv4.tcp_retries2</code>.  The whole
+retransmission process takes from 13 to 30 minutes depending on the
+rto.</p>
+<p>In practice, these timeout errors happen in the following cases:</p>
+<ul>
+<li>
+<p><code>FIN</code> packets from a host are dropped then the host goes down.</p>
+</li>
+<li>
+<p>A host kernel panics, all TCP connections from the host are gone and
+no <code>FIN</code> packet is sent.</p>
+</li>
+<li>
+<p>A mis-configured firewall drops ICMP <code>FRAG_NEEDED</code> messages, causing
+timeout during TCP <a href="https://packetlife.net/blog/2008/aug/18/path-mtu-discovery/">path MTU
+discovery</a>.</p>
+</li>
+</ul>
+<p>The following table shows syscall (<code>recv()</code>, <code>send()</code>, and etc) return
+values for these timeout errors:</p>
+<table>
+<thead>
+<tr>
+<th>abort reason</th>
+<th>received ICMP</th>
+<th>errno</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>keepalive timeout</td>
+<td>yes</td>
+<td>ETIMEDOUT</td>
+</tr>
+<tr>
+<td>keepalive timeout</td>
+<td>no</td>
+<td>ETIMEDOUT</td>
+</tr>
+<tr>
+<td>retransmission timeout</td>
+<td>yes</td>
+<td><a href="https://github.com/torvalds/linux/blob/e292f05e0df73f9fcc93329663936e1ded97a988/net/ipv4/icmp.c#L116-L182">converted ICMP error</a></td>
+</tr>
+<tr>
+<td>retransmission timeout</td>
+<td>no</td>
+<td>ETIMEDOUT</td>
+</tr>
+</tbody>
+</table>
+<p>All these timeout errors are counted in the SNMP mib
+<code>TCPABORTONTIMEOUT</code> and can be shown with the following command:</p>
+<pre class="language-x"><code class="language-x">$ netstat -s | grep timeout
+    3 connections aborted due to timeout
+</code></pre>
+<h2 id="4.-summary">4. Summary <a class="header-anchor" href="#4.-summary" aria-hidden="true">¶</a></h2>
+<p>Different network timeouts have different durations and return values.
+ICMP messages provide feedbacks to network problems.  However, many
+ICMP messages are not forwarded to applications.</p>
+<p>We could reduce network timeout errors by doing the following:</p>
+<ol>
+<li>
+<p>Use <code>ip route</code> or <code>iptables</code> to generate ICMP <code>DEST_UNREACH</code>
+messages for non-existing hosts.</p>
+</li>
+<li>
+<p>Make firewall filters send error feedbacks instead of dropping
+packets silently.</p>
+</li>
+<li>
+<p>Do not drop ICMP <code>HOST_UNREACH</code> messages.</p>
+</li>
+<li>
+<p>Enable socket option <code>IP_RECVERR</code> to receive and handle ICMP errors
+in applications.</p>
+</li>
+</ol>
+
+  </div>
+</div>
+<div class="vskip"></div>
+<script src="https://utteranc.es/client.js"
+        repo="mechpen/mechpen.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+
+    </div>
+  </body>
+</html>
