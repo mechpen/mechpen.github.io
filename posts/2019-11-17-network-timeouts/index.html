@@ -317,9 +317,9 @@ gives up and returns <code>ETIMEDOUT</code>.</p>
 <p>The number of SYN retries can be configured with sysctl parameter
 <code>net.ipv4.tcp_syn_retries</code>, or socket option <code>TCP_SYNCNT</code>.  The
 default retry number is 6.  Plus the original one, 7 <code>SYN</code> packets are
-sent before the connection is aborted.  The initial retransmission
-timeout (rto) is 1 second, so the default connection timeout period is
-127 seconds.</p>
+sent before the connection is aborted.  The first retry interval is
+the initial retransmission timeout (rto), which is 1 second.  7
+retries with exponential back-off take 127 seconds to complete.</p>
 <p>The connection timeout happens when the <code>SYN</code>, <code>SYN-ACK</code> or ICMP error
 messages are dropped in the network.</p>
 <p>The remote peer could also drop <code>SYN</code> packets if the socket backlog
