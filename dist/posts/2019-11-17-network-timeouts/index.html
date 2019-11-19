@@ -251,7 +251,8 @@ original sender transparently.</p>
 tunnel implementation.  For example, IP-IP tunnel should return ICMP
 messages to the original sender according to <a href="https://tools.ietf.org/html/rfc2003#section-4">RFC
 2003</a>.  However, Linux
-does not convert and return ICMP messages generated within the tunnel.</p>
+does not convert and return ICMP messages generated in the tunnel
+transit network.</p>
 <p>There are also network errors that do not generate feedback signal at
 all.  For example, when SNAT cannot allocate a new port for a
 connection due to conflicts, the <code>SYN</code> packet is silently dropped.
@@ -274,7 +275,7 @@ timeouts:</p>
 <tbody>
 <tr>
 <td>DNS lookup timeout</td>
-<td>10 * number of nameservers</td>
+<td>10 seconds * number of nameservers</td>
 </tr>
 <tr>
 <td>TCP connection timeout</td>
@@ -401,8 +402,8 @@ values for these timeout errors:</p>
 </code></pre>
 <h2 id="4.-summary">4. Summary <a class="header-anchor" href="#4.-summary" aria-hidden="true">¶</a></h2>
 <p>Different network timeouts have different durations and return values.
-ICMP messages provide feedbacks to network problems.  However, many
-ICMP messages are not forwarded to applications.</p>
+ICMP messages provide error feedback signals for network problems.
+However, many ICMP messages are not forwarded to applications.</p>
 <p>We could reduce network timeout errors by doing the following:</p>
 <ol>
 <li>

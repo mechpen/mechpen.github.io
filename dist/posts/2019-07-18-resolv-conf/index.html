@@ -72,7 +72,7 @@
   </div>
 
   <div class="entry">
-    <p>The file <code>/etc/resolv.conf</code> defines nameservers for glibc.  Normally this file contains 2 or 3 nameservers for redundancy.  When the nameservers serve behind one virtual IP, it is still better to have multiple (max 3) duplicated entries than having just one entry.</p>
+    <p>The file <code>/etc/resolv.conf</code> defines nameservers for glibc.  Normally this file contains 2 or 3 nameservers for redundancy.  When several nameservers serve behind one virtual IP, it is still better to have multiple (max 3) duplicated entries than having just one virtual IP entry in <code>/etc/resolv.conf</code>.</p>
     <p>The following tests show the difference between 1 entry and 3 entries
 in <code>resolv.conf</code>.  The setup uses a fake nameserver <code>10.10.10.10</code> that
 does not exist.</p>

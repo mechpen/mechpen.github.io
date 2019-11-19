@@ -174,7 +174,8 @@ When tunneling is used, ICMP messages may get dropped depending on the
 tunnel implementation.  For example, IP-IP tunnel should return ICMP
 messages to the original sender according to [RFC
 2003](https://tools.ietf.org/html/rfc2003#section-4).  However, Linux
-does not convert and return ICMP messages generated within the tunnel.
+does not convert and return ICMP messages generated in the tunnel
+transit network.
 
 There are also network errors that do not generate feedback signal at
 all.  For example, when SNAT cannot allocate a new port for a
@@ -193,7 +194,7 @@ timeouts:
 
 | type                            | duration         |
 | ------------------------------- | ---------------- |
-| DNS lookup timeout              | 10 * number of nameservers |
+| DNS lookup timeout              | 10 seconds * number of nameservers |
 | TCP connection timeout          | 127 seconds      |
 | TCP idle timeout w/o keepalive  | infinity         |
 | TCP idle timeout with keepalive | > 2 hours        |
@@ -298,8 +299,8 @@ $ netstat -s | grep timeout
 ## 4. Summary
 
 Different network timeouts have different durations and return values.
-ICMP messages provide feedbacks to network problems.  However, many
-ICMP messages are not forwarded to applications.
+ICMP messages provide error feedback signals for network problems.
+However, many ICMP messages are not forwarded to applications.
 
 We could reduce network timeout errors by doing the following:
 
