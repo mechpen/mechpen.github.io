@@ -124,7 +124,7 @@ th, td {
 }
 
 tbody tr:nth-child(odd) {
-  background-color: #f2f2f2;
+  background-color: var(--note-background-color);
 }
 
 ::-moz-selection {
