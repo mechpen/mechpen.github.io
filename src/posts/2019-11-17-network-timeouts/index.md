@@ -30,10 +30,11 @@ In this post, we first examine different error feedback signals, then
 look into each of the above 3 types of timeouts.
 
 We need to pay special attention to the 3rd type of timeouts because
-it is more likely to be ignored.  For example,
-[gRPC](https://grpc.io/) does not handle this type of timeout error
-properly with its default configuration.  When the error happens, it
-could take gRPC more than 13 minutes to reset a connection.
+it is more likely to be ignored.  For example, gRPC does not handle
+this type of [timeout
+error](https://github.com/grpc/grpc-go/issues/3206) properly with its
+default configuration.  When the error happens, it could take gRPC
+more than 13 minutes to reset a connection.
 
 ## 1. Network error feedbacks
 

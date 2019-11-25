@@ -12,7 +12,7 @@ $lighterGray: #eee;
 $darkGray: #333;
 $darkerGray: #222;
 
-[theme="light"] {
+:root {
   #{--link-color}: $blue;
   #{--nav-color}: $gray;
   #{--name-color}: $gray;
@@ -22,24 +22,6 @@ $darkerGray: #222;
   #{--border-color}: $lightGray;
   #{--date-color}: $darkGray;
   #{--note-background-color}: $lighterGray;
-  #light-mode {
-    display: none;
-  }
-}
-
-[theme="dark"] {
-  #{--link-color}: $lightblue;
-  #{--nav-color}: $lightGray;
-  #{--name-color}: $lightGray;
-  #{--main-background-color}: $darkerGray;
-  #{--main-text-color}: $lighterGray;
-  #{--select-background-color}: $lightGray;
-  #{--border-color}: $gray;
-  #{--date-color}: $gray;
-  #{--note-background-color}: $darkGray;
-  #dark-mode {
-    display: none;
-  }
 }
 
 /**************/
@@ -51,7 +33,6 @@ body {
   font: 18px/1.4 Helvetica, Arial, sans-serif;
   color: var(--main-text-color);
   background: var(--main-background-color);
-  transition: background 1s ease;
 }
 
 .container {

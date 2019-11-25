@@ -1,28 +1,3 @@
-<script type="text/javascript">
-
-  var currentTheme = localStorage.getItem('theme')
-
-  function setTheme(theme) {
-    if (theme === "dark") {
-      document.documentElement.setAttribute('theme', 'dark')
-    } else {
-      document.documentElement.setAttribute('theme', 'light')
-    }
-  }
-  setTheme(currentTheme)
-
-  function switchTheme() {
-    if (currentTheme == "dark") {
-      currentTheme = ""
-    } else {
-      currentTheme = "dark"
-    }
-    localStorage.setItem('theme', currentTheme)
-    setTheme(currentTheme)
-  }
-
-</script>
-
 <!DOCTYPE html>
 <html>
   <head>
@@ -55,8 +30,6 @@
 	    <a href="/">posts</a>
 	    <a href="/notes">notes</a>
 	    <a href="/about">about</a>
-            <a id="light-mode" onclick="switchTheme()">light mode</a>
-            <a id="dark-mode" onclick="switchTheme()">dark mode</a>
           </nav>
         </header>
       </div>
