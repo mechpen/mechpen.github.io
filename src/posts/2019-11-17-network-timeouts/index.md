@@ -249,7 +249,7 @@ $ netstat -s | grep -i listen
 
 When a TCP connection is idle, i.e. there is no outstanding data to
 transmit, the kernel TCP stack does nothing by default.  If an
-application only receive data from a TCP socket, the `recv()` call
+application only receives data from a TCP socket, the `recv()` call
 could block forever without noticing network connection errors.
 
 If the socket option `SO_KEEPALIVE` is enabled, the kernel TCP stack
@@ -258,7 +258,7 @@ However, it takes more than 2 hours for the keepalive probes to detect
 a dead connection.  More details of the keepalive probes can be found
 at the [TCP man page](https://linux.die.net/man/7/tcp).
 
-When there are outstanding packets to send, a host retransmit packets
+When there are outstanding packets to send, a host retransmits packets
 if no `ACK` is received.  The retransmission happens regardless of
 whether the host receives any ICMP error messages or not, as shown in
 the [previous section](#1.3.-icmp-dest_unreach).
@@ -274,6 +274,12 @@ In practice, these timeout errors happen in the following cases:
 
 - A host kernel panics, all TCP connections from the host are gone and
   no `FIN` packet is sent.
+
+- In a kubernetes cluster using calico cni, when a node is deleted
+  with `kubectl delete node`, then packets from the node are
+  immediately dropped by other nodes due to iptables filters.  For
+  example, this problem causes this
+  [bug](https://github.com/uswitch/kiam/issues/217#issuecomment-557725234).
 
 - A mis-configured firewall drops ICMP `FRAG_NEEDED` messages, causing
   timeout during TCP [path MTU
