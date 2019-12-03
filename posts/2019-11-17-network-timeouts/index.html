@@ -86,9 +86,9 @@ For example, when a <code>SYN</code> is received on a closed port, or when an
 <code>ACK</code> is received without proper handshake.  In most real-life cases,
 <code>RST</code> packets are received when the remote host is up, but the remote
 server process is down.</p>
-<p>Depending on TCP states, different error values are returned to
-applications when <code>RST</code> message is received, as shown in the following
-<a href="https://github.com/torvalds/linux/blob/e292f05e0df73f9fcc93329663936e1ded97a988/net/ipv4/tcp_input.c#L4109-L4120">kernel code
+<p>Depending on the local TCP connection state, syscalls like <code>connect()</code>
+or <code>send()/recv()</code> return different error values when the connection
+receives <code>RST</code> messages, as shown in the following <a href="https://github.com/torvalds/linux/blob/e292f05e0df73f9fcc93329663936e1ded97a988/net/ipv4/tcp_input.c#L4109-L4120">kernel code
 snippet</a>:</p>
 <pre class="language-c"><code class="language-c">	<span class="token keyword">switch</span> <span class="token punctuation">(</span>sk<span class="token operator">-></span>sk_state<span class="token punctuation">)</span> <span class="token punctuation">{</span>
 	<span class="token keyword">case</span> TCP_SYN_SENT<span class="token operator">:</span>
@@ -119,7 +119,7 @@ host is up:</p>
 <ul>
 <li>
 <p>If the remote host is up, it replies a <code>RST</code> message, causing the
-sender's <code>send()</code> syscalls to return <code>EPIPE</code>,</p>
+sender's new <code>send()</code> syscalls to return <code>EPIPE</code>,</p>
 </li>
 <li>
 <p>If the remote host is down, the sender may receive no feedback
