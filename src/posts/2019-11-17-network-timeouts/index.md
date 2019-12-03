@@ -49,9 +49,9 @@ For example, when a `SYN` is received on a closed port, or when an
 `RST` packets are received when the remote host is up, but the remote
 server process is down.
 
-Depending on TCP states, different error values are returned to
-applications when `RST` message is received, as shown in the following
-[kernel code
+Depending on the local TCP connection state, syscalls like `connect()`
+or `send()/recv()` return different error values when the connection
+receives `RST` messages, as shown in the following [kernel code
 snippet](https://github.com/torvalds/linux/blob/e292f05e0df73f9fcc93329663936e1ded97a988/net/ipv4/tcp_input.c#L4109-L4120):
 
 ```c
@@ -88,7 +88,7 @@ to the remote peer.  Then what happens depends on whether the remote
 host is up:
 
 - If the remote host is up, it replies a `RST` message, causing the
-  sender's `send()` syscalls to return `EPIPE`,
+  sender's new `send()` syscalls to return `EPIPE`,
 
 - If the remote host is down, the sender may receive no feedback
   (assuming no ICMP).  The sender then retransmits packets and
