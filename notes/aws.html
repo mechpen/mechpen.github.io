@@ -10,16 +10,14 @@
 <title>AWS – Mechpen</title>
 
 
-<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="icon" type="image/png" href="/assets/favicon.png" />
+<link rel="stylesheet" href="/assets/style.css" />
 
     
     
-    <link href="/assets/prism.css" rel="stylesheet" />
-    
-    <link href="/assets/style.css" rel="stylesheet" />
   </head>
 
-  <body>
+  <body class="line-numbers">
     <div>
       <div class="container">
         <header class="masthead clearfix">
@@ -36,12 +34,11 @@
     </div>
 
     <div id="main" role="main" class="container">
-      
-<article class="page">
+      <article class="page">
   <h1>AWS</h1>
 
   <div class="entry">
-    <h2 id="load-balancers">load balancers <a class="header-anchor" href="#load-balancers" aria-hidden="true">¶</a></h2>
+    <h2 id="load-balancers">load balancers <a class="header-anchor" href="#load-balancers">¶</a></h2>
 <ul>
 <li>
 <p><strong>Classic TCP ELB</strong> works like TCP proxy.  It creates 2 back to back
@@ -57,9 +54,9 @@ security group.  The instance security group need to allow incoming
 traffic from public internet.</p>
 </li>
 </ul>
-<h2 id="aws-cli">aws cli <a class="header-anchor" href="#aws-cli" aria-hidden="true">¶</a></h2>
+<h2 id="aws-cli">aws cli <a class="header-anchor" href="#aws-cli">¶</a></h2>
 <p>who am i:</p>
-<pre class="language-x"><code class="language-x">aws sts get-caller-identity
+<pre><code>aws sts get-caller-identity
 </code></pre>
 
   </div>

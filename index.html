@@ -10,14 +10,14 @@
 <title>Mechpen</title>
 
 
-<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="icon" type="image/png" href="/assets/favicon.png" />
+<link rel="stylesheet" href="/assets/style.css" />
 
     
     
-    <link href="/assets/style.css" rel="stylesheet" />
   </head>
 
-  <body>
+  <body class="line-numbers">
     <div>
       <div class="container">
         <header class="masthead clearfix">
@@ -34,29 +34,35 @@
     </div>
 
     <div id="main" role="main" class="container">
-      
-<div class="posts">
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+      <div class="posts">
   
   
   
   
     <article class="post">
 
-      <h1><a href="/posts/2019-11-17-network-timeouts/">Network timeouts</a></h1>
+      <h1><a href="/posts/2020-04-27-cfs-group/index.html">Linux CFS and task group</a></h1>
+
+      <div class="date">
+        April 27, 2020
+      </div>
+
+      <div class="entry">
+        <p>
+I dived into the kernel scheduler code under
+(<code>kernel/sched/</code>) to understand how CFS works and how the
+task group <code>cpu.shares</code> value is used in CFS.
+</p>
+      </div>
+
+      <a href="/posts/2020-04-27-cfs-group/index.html" class="more">read more</a>
+    </article>
+  
+  
+  
+    <article class="post">
+
+      <h1><a href="/posts/2019-11-17-network-timeouts/index.html">Network timeouts</a></h1>
 
       <div class="date">
         November 17, 2019
@@ -73,14 +79,14 @@ rid of many network timeouts.
 </p>
       </div>
 
-      <a href="/posts/2019-11-17-network-timeouts/" class="more">read more</a>
+      <a href="/posts/2019-11-17-network-timeouts/index.html" class="more">read more</a>
     </article>
   
   
   
     <article class="post">
 
-      <h1><a href="/posts/2019-10-20-rust-lifetime-mut/">Understanding Rust lifetime and mutability</a></h1>
+      <h1><a href="/posts/2019-10-20-rust-lifetime-mut/index.html">Understanding Rust lifetime and mutability</a></h1>
 
       <div class="date">
         October 20, 2019
@@ -94,14 +100,14 @@ summary of my current understandings.
 </p>
       </div>
 
-      <a href="/posts/2019-10-20-rust-lifetime-mut/" class="more">read more</a>
+      <a href="/posts/2019-10-20-rust-lifetime-mut/index.html" class="more">read more</a>
     </article>
   
   
   
     <article class="post">
 
-      <h1><a href="/posts/2019-09-28-rust-lifetime/">Mis-Understanding Rust lifetime</a></h1>
+      <h1><a href="/posts/2019-09-28-rust-lifetime/index.html">Mis-Understanding Rust lifetime</a></h1>
 
       <div class="date">
         September 28, 2019
@@ -118,14 +124,14 @@ compiler code so I could be wrong.
 </p>
       </div>
 
-      <a href="/posts/2019-09-28-rust-lifetime/" class="more">read more</a>
+      <a href="/posts/2019-09-28-rust-lifetime/index.html" class="more">read more</a>
     </article>
   
   
   
     <article class="post">
 
-      <h1><a href="/posts/2019-08-29-bpf-verifier/">Workaround for a bpf verifier error</a></h1>
+      <h1><a href="/posts/2019-08-29-bpf-verifier/index.html">Workaround for a bpf verifier error</a></h1>
 
       <div class="date">
         August 29, 2019
@@ -135,14 +141,14 @@ compiler code so I could be wrong.
         <p>Linux bpf verifier allows only one specific pattern for accessing skb data.  To help the clang compiler generate the required access pattern, we have to write C code in a certain way to reflect this pattern.</p>
       </div>
 
-      <a href="/posts/2019-08-29-bpf-verifier/" class="more">read more</a>
+      <a href="/posts/2019-08-29-bpf-verifier/index.html" class="more">read more</a>
     </article>
   
   
   
     <article class="post">
 
-      <h1><a href="/posts/2019-08-03-bpf-map/">Linux bpf map internals</a></h1>
+      <h1><a href="/posts/2019-08-03-bpf-map/index.html">Linux bpf map internals</a></h1>
 
       <div class="date">
         August  3, 2019
@@ -152,14 +158,14 @@ compiler code so I could be wrong.
         <p>Linux bpf maps are used to share data among bpf programs and user applications.  A bpf map could be created by simply declaring a <code>bpf_elf_map</code> struct.  Under the hood, lots of things work together to set up the maps.</p>
       </div>
 
-      <a href="/posts/2019-08-03-bpf-map/" class="more">read more</a>
+      <a href="/posts/2019-08-03-bpf-map/index.html" class="more">read more</a>
     </article>
   
   
   
     <article class="post">
 
-      <h1><a href="/posts/2019-07-18-resolv-conf/">resolv.conf for nameservers with a virtual IP</a></h1>
+      <h1><a href="/posts/2019-07-18-resolv-conf/index.html">resolv.conf for nameservers with a virtual IP</a></h1>
 
       <div class="date">
         July 18, 2019
@@ -169,14 +175,14 @@ compiler code so I could be wrong.
         <p>The file <code>/etc/resolv.conf</code> defines nameservers for glibc.  Normally this file contains 2 or 3 nameservers for redundancy.  When several nameservers serve behind one virtual IP, it is still better to have multiple (max 3) duplicated entries than having just one virtual IP entry in <code>/etc/resolv.conf</code>.</p>
       </div>
 
-      <a href="/posts/2019-07-18-resolv-conf/" class="more">read more</a>
+      <a href="/posts/2019-07-18-resolv-conf/index.html" class="more">read more</a>
     </article>
   
   
   
     <article class="post">
 
-      <h1><a href="/posts/2019-06-26-tcp/">TCP sequence number and 3-way handshake</a></h1>
+      <h1><a href="/posts/2019-06-26-tcp/index.html">TCP sequence number and 3-way handshake</a></h1>
 
       <div class="date">
         June 26, 2019
@@ -186,8 +192,24 @@ compiler code so I could be wrong.
         <p>One challenge of TCP is to handle stale packets. Packets from previous connections may get delayed in the network and interfere with new connections. To solve this problem, TCP enforces the following rule on sequence numbers.</p>
       </div>
 
-      <a href="/posts/2019-06-26-tcp/" class="more">read more</a>
+      <a href="/posts/2019-06-26-tcp/index.html" class="more">read more</a>
     </article>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
 </div>
