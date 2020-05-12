@@ -1,0 +1,38 @@
+---
+_template: null
+
+---
+
+<!DOCTYPE html>
+<html>
+  <head>
+    {% include header.html %}
+    {% for script in scripts %}
+    <script src="{{ script }}"></script>
+    {% endfor %}
+    {% for style in styles %}
+    <link href="{{ style }}" rel="stylesheet" />
+    {% endfor %}
+  </head>
+
+  <body class="line-numbers">
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      {{ _body }}
+    </div>
+  </body>
+</html>

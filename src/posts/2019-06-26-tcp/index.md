@@ -26,7 +26,7 @@ T is 120 seconds according to [Tanenbaum]. If this rule is violated,
 bad things could happen.  The following figure shows one such
 scenario.
 
-{% loadPgf tcp-stale-seq.tex %}
+{% loadpgf tcp-stale-seq.tex %}
 
 Packets 1 and 2 are stale packets from a previous connection.  The
 sender re-uses initial sequence number N in packet 3, before the stale
@@ -62,7 +62,7 @@ designed to help validate SYN packets.  For example, in the following
 figure, the stale SYN packet 1 could not complete 3-way handshake
 because of the RST packet 3.
 
-{% loadPgf tcp-handshake.tex %}
+{% loadpgf tcp-handshake.tex %}
 
 Can we attach data in the first SYN or SYN-ACK packets to reduce the
 connection time?  Theoretically yes according to [Tomlinson].  However,
@@ -129,4 +129,4 @@ counter needs to grow faster than 2M/8 = 250 kHz.
 [Tanenbaum]: https://www.pearson.com/us/higher-education/program/Tanenbaum-Computer-Networks-5th-Edition/PGM270019.html
 [RFC 793]: https://tools.ietf.org/html/rfc793#section-3.3
 [sequence prediction attack]: https://en.wikipedia.org/wiki/TCP_sequence_prediction_attack
-[Tomlinson]: Tomlin75.pdf
+[Tomlinson]: {% srclink Tomlin75.pdf %}

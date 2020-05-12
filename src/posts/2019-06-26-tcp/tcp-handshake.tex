@@ -1,14 +1,10 @@
-\documentclass{minimal}
-\usepackage{microtype}
-\DisableLigatures{encoding=*,family=*}
+\documentclass{standalone}
 \usepackage{tikz}
-\usetikzlibrary{backgrounds,decorations.pathmorphing,arrows.meta,positioning}
+\usetikzlibrary{decorations.pathmorphing,arrows.meta,positioning}
 
 \begin{document}
 \begin{tikzpicture}
   [
-    show background rectangle,
-    background rectangle/.style = {fill=white},
     endpoint/.style = {above,yshift=5},
     packet line/.style = thick,
     delayed/.style = {decorate,decoration=straight zigzag},

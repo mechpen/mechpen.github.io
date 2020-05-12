@@ -13,7 +13,8 @@ excerpt:
 
 ## The faulty code
 
-At first I used the following [code](demo_bad.c) to access skb data:
+At first I used the following [code]({% srclink demo_bad.c %}) to
+access skb data:
 
 ```c
 #define ensure_header(skb, offset, hdr)				\
@@ -65,9 +66,9 @@ field to compute IP header length, then it reads the TCP header `doff`
 field to compute TCP header length.  Both accesses are guarded by the
 macro `ensure_header()` to ensure that data is available.
 
-The clang compiler generates the following bpf [assembly](demo_bad.s):
+The clang compiler generates the following bpf [assembly]({% srclink demo_bad.s %}):
 
-```asm
+```text
        0: 	r6 = r1
        1: 	r1 = 680997
        2: 	*(u32 *)(r10 - 4) = r1
@@ -116,13 +117,12 @@ LBB0_5:
 LBB0_6:
       43: 	r0 = 0
       44: 	exit
-
 ```
 
 When loading the bpf program, the verifier rejects the program with an
 error:
 
-```x
+```text
 # tc filter add dev wlan0 egress bpf da obj demo_bad.o sec main
 ...
 36: (71) r3 = *(u8 *)(r1 +12)
@@ -145,7 +145,7 @@ After a little bit reading of the bpf verifier, I found that bpf
 packet access instructions should follow a pattern similar to
 `#13-#16` in the above assembly code:
 
-```x
+```text
       13: 	r3 = r1			      ; r1 is skb->data + x
       14: 	r3 += 34
       15: 	if r3 > r2 goto +27 <LBB0_6>  ; if (data + tot_len > data_end)
@@ -188,7 +188,8 @@ We could improve the bpf verifier to make it more flexible.  On the
 other hand, we could write C code in a certain way to make the
 compiler generate the desired instructions.
 
-The following is the valid [code](demo_good.c) that I came up with:
+The following is the valid [code]({% srclink demo_good.c %}) that I
+came up with:
 
 ```c
 #define ensure_header(skb, var_off, const_off, hdr)		\
@@ -236,8 +237,8 @@ int handle_skb(struct sk_buff *skb)
 
 ## Source code
 
-- [demo_common.h](demo_common.h)
-- [demo_bad.c](demo_bad.c)
-- [demo_good.c](demo_good.c)
+- [demo_common.h]({% srclink demo_common.h %})
+- [demo_bad.c]({% srclink demo_bad.c %})
+- [demo_good.c]({% srclink demo_good.c %})
 
 [comments]: https://github.com/torvalds/linux/blob/9cf6b756cdf2cd38b8b0dac2567f7c6daf5e79d5/kernel/bpf/verifier.c#L5120-L5160

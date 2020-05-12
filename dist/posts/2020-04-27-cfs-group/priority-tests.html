@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>CFS process priority tests – Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png" />
+<link rel="stylesheet" href="/assets/style.css" />
+
+    
+    
+    <link href="/assets/prism.css" rel="stylesheet" />
+    
+  </head>
+
+  <body class="line-numbers">
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <div class="post">
+  <h1>CFS process priority tests</h1>
+
+  <div class="date">
+    April 27, 2020
+  </div>
+
+  <div class="entry">
+    <p></p>
+    <h2 id="setup">Setup <a class="header-anchor" href="#setup">¶</a></h2>
+<p>OS: ubuntu 19.10</p>
+<p>Machine: qemu-kvm</p>
+<p>Make sure to disable the autogroup feature, which is enabled by
+default.  The autogroup automatically creates a CPU control group for
+each new session.  The scheduling effect of process priority is
+overridden by the effect of its group weights.</p>
+<p>Run the following command to disable autogroup:</p>
+<pre><code class="language-text">root@emu:~# echo 0 &gt; /proc/sys/kernel/sched_autogroup_enabled
+</code></pre>
+<p>The test script is at <a href="../loadtest/genload.py">genload.py</a></p>
+<h2 id="test-1">Test 1 <a class="header-anchor" href="#test-1">¶</a></h2>
+<p>In the 1st terminal:</p>
+<pre><code class="language-text">root@emu:~# python3 genload.py 
+...
+[02:03:07] count 1,892,493 pcpu 73(73) exec_time 491(491)
+... (renice 2nd process)
+[02:03:08] count 2,165,950 pcpu 72(72) exec_time 538(538)
+[02:03:09] count 2,071,702 pcpu 72(72) exec_time 548(548)
+[02:03:10] count 2,060,509 pcpu 72(72) exec_time 547(547)
+</code></pre>
+<p>In the 2nd terminal:</p>
+<pre><code class="language-text">root@emu:~# python3 genload.py 
+...
+[02:03:07] count 1,921,506 pcpu 49(49) exec_time 490(490)
+... (renice +1)
+[02:03:08] count 1,832,973 pcpu 49(49) exec_time 446(446)
+[02:03:09] count 1,676,413 pcpu 49(49) exec_time 439(439)
+[02:03:10] count 1,682,007 pcpu 48(48) exec_time 442(442)
+</code></pre>
+<h2 id="test-2">Test 2 <a class="header-anchor" href="#test-2">¶</a></h2>
+<p>In the 1st terminal:</p>
+<pre><code class="language-text">root@emu:~# python3 genload.py 
+...
+[02:34:18] count 951,643 pcpu 73(73) exec_time 248(248)
+[02:34:19] count 1,006,798 pcpu 71(71) exec_time 237(237)
+(renice +1)
+[02:34:20] count 807,376 pcpu 70(70) exec_time 203(203)
+[02:34:21] count 869,612 pcpu 68(68) exec_time 206(206)
+</code></pre>
+<p>In the other 3 terminals:</p>
+<pre><code class="language-text">root@emu:~# python3 genload.py
+...
+[02:34:18] count 974,679 pcpu 22(22) exec_time 247(247)
+[02:34:19] count 943,301 pcpu 23(23) exec_time 242(242)
+(renice 1st process)
+[02:34:20] count 1,016,265 pcpu 23(23) exec_time 259(259)
+[02:34:21] count 1,025,985 pcpu 23(23) exec_time 258(258)
+</code></pre>
+
+  </div>
+</div>
+<div class="vskip"></div>
+<script src="https://utteranc.es/client.js"
+        repo="mechpen/mechpen.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+
+
+    </div>
+  </body>
+</html>

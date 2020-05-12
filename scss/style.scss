@@ -1,0 +1,250 @@
+/****************/
+/* THEME COLORS */
+/****************/
+
+$blue: #0000CC;
+$lightblue: #7777FF;
+$black: #000;
+$white: #fff;
+$gray: #666;
+$lightGray: #aaa;
+$lighterGray: #eee;
+$darkGray: #333;
+$darkerGray: #222;
+
+:root {
+  #{--link-color}: $blue;
+  #{--nav-color}: $gray;
+  #{--name-color}: $gray;
+  #{--main-background-color}: $white;
+  #{--main-text-color}: $black;
+  #{--select-background-color}: $lightGray;
+  #{--border-color}: $lightGray;
+  #{--date-color}: $darkGray;
+  #{--note-background-color}: $lighterGray;
+}
+
+/**************/
+/* BASE RULES */
+/**************/
+
+body {
+  margin: 0;
+  font: 18px/1.4 Helvetica, Arial, sans-serif;
+  color: var(--main-text-color);
+  background: var(--main-background-color);
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 740px;
+  padding: 0 10px;
+  width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 15px 0 0;
+  padding: 0;
+  a {
+    color: inherit;
+  }
+  .header-anchor {
+      display: none;
+  }
+  &:hover, &:active {
+    .header-anchor {
+      display: inline;
+      color: var(--link-color);
+    }
+  }
+}
+
+h1 {
+  font-size: 1.5em;
+}
+
+h2 {
+  font-size: 1.2em;
+}
+
+h3 {
+  font-size: 1em;
+}
+
+p {
+  margin: 0.5em 0;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+  cursor: pointer;
+  &:hover, &:active {
+    color: var(--link-color);
+  }
+}
+
+.vskip {
+  margin-top: 10px;
+}
+
+.date {
+  font-style: italic;
+  font-size: 15px;
+  color: var(--date-color);
+}
+
+code {
+  font-size: 0.9em;
+  background: var(--note-background-color);
+}
+
+code:not([class]) {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8em;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+}
+
+tbody {
+  tr:nth-child(odd) {
+    background-color: var(--note-background-color);
+  }
+}
+
+::-moz-selection {
+  background: var(--select-background-color);
+}
+::selection {
+  background: var(--select-background-color);
+}
+
+// Nicolas Gallagher's micro clearfix hack
+// http://nicolasgallagher.com/micro-clearfix-hack/
+.clearfix:before,
+.clearfix:after {
+  content: " ";
+  display: table;
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+/************/
+/* CONTENTS */
+/************/
+
+.masthead {
+  padding: 8px 0;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border-color);
+  display: flex;
+}
+
+.site-info {
+  display: flex;
+
+  .site-name {
+    margin: auto;
+    font-weight: 300;
+    font-size: 26px;
+    letter-spacing: 1px;
+    color: var(--name-color);
+  }
+}
+
+nav {
+  color: var(--nav-color);
+  margin: auto;
+  margin-right: 0;
+
+  a {
+    margin-left: 20px;
+    text-align: right;
+    text-transform: uppercase;
+    font-weight: 300;
+    font-size: 14px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    color: inherit;
+  }
+}
+
+.posts > .post {
+  padding-bottom: 1em;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--border-color);
+}
+
+.posts > .post:last-child {
+  padding-bottom: 1em;
+  border-bottom: none;
+}
+
+.post {
+  .more {
+    margin-right: 20px;
+    text-transform: uppercase;
+    font-size: 15px;
+  }
+}
+
+.entry > .img {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 10px 0;
+}
+
+.notes {
+  a.note {
+    float: left;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: calc(100% * .3333);
+    height: 80px;
+    margin-top: 10px;
+    color: var(--main-text-color);
+  }
+
+  a.note:hover {
+    background: var(--note-background-color);
+  }
+}
+
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/**********/
+/* OTHERS */
+/**********/
+
+.katex {
+  font-size: 1.1em;
+}
+
+.badcode + .language-rust {
+    background: #f5e2e0;
+}
+
+.badcode + .language-rust .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
+    background: #f5e2e0;
+}

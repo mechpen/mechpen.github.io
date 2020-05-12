@@ -1,0 +1,392 @@
+* reading notes
+
+https://lwn.net/Articles/531853/
+https://trepo.tuni.fi/bitstream/handle/10024/96864/GRADU-1428493916.pdf
+
+* summary
+
+cfs_rq->load is a sum of se load on the cfs_rq.  cfs_rq->load is
+updated in function
+ - account_entity_enqueue()
+ - account_entity_dequeue()
+
+delta_exec * weight / lw.weight
+
+tg weight (shares) vs task weight
+
+* data structure
+
+// percpu
+struct rq {
+	struct cfs_rq		cfs;
+};
+
+struct cfs_rq {
+	struct load_weight	load;
+	unsigned int		nr_running;
+	unsigned int		h_nr_running;      /* SCHED_{NORMAL,BATCH,IDLE} */
+
+	struct rb_root_cached	tasks_timeline;
+	/* CPU runqueue to which this cfs_rq is attached */
+	struct rq		*rq;
+	/* group that "owns" this runqueue */
+	struct task_group	*tg;
+
+	struct sched_avg	avg;
+};
+
+struct sched_entity {
+	struct load_weight		load;
+
+	struct rb_node			run_node;  /* tasks_timeline in rb tree */
+	struct sched_entity		*parent;
+	/* rq on which this entity is (to be) queued: */
+	struct cfs_rq			*cfs_rq;
+	/* rq "owned" by this entity/group: */
+	struct cfs_rq			*my_q;
+
+	/* cached value of my_q->h_nr_running */
+	unsigned long			runnable_weight;
+	struct sched_avg		avg;
+};
+gcfs_rq = group_cfs_rq(se)  se->my_q    returns group cfs_rq for group se
+cfs_rq = cfs_rq_of(se)      se->cfs_rq  returns cfs_rq that se is on
+
+struct task_group {
+	/* schedulable entities of this group on each CPU */
+	struct sched_entity	**se;
+	/* runqueue "owned" by this group on each CPU */
+	struct cfs_rq		**cfs_rq;
+	struct task_group	*parent;
+
+	unsigned long		shares;
+	atomic_long_t		load_avg;
+};
+
+struct task_struct {
+	struct sched_entity		se;
+	struct task_group		*sched_task_group;
+}
+
+struct sched_avg {
+	u64				last_update_time;
+
+	u64				load_sum;
+	u64				runnable_sum;
+	u32				util_sum;
+
+	u32				period_contrib;
+
+	unsigned long			load_avg;
+	unsigned long			runnable_avg;
+	unsigned long			util_avg;
+
+	struct util_est			util_est;
+} ____cacheline_aligned;
+
+* code
+
+- se->load is used to calculate vruntime
+- cfs_rq->load collects se->load
+
+- se->avg
+- cfs_rq->avg
+
+** pelt
+
+One period is 1024 microseconds.
+
+Comment before update_idle_rq_clock_pelt():
+
+/* ... A rq is fully used when the /Sum util_sum
+ * is greater or equal to:
+ * (LOAD_AVG_MAX - 1024 + rq->cfs.avg.period_contrib) << SCHED_CAPACITY_SHIFT;
+ */
+
+Comment before __update_load_avg_blocked_se()
+
+/*
+ * sched_entity:
+ *
+ *   task:
+ *     se_weight()   = se->load.weight
+ *     se_runnable() = !!on_rq
+ *
+ *   group: [ see update_cfs_group() ]
+ *     se_weight()   = tg->shares * grq->load_avg / tg->load_avg
+ *     se_runnable() = grq->h_nr_running  // number of runnable tasks
+ *
+ *   runnable_sum = se_runnable() * runnable = grq->runnable_sum
+ *   runnable_avg = runnable_sum
+ *
+ *   load_sum := runnable
+ *   load_avg = se_weight(se) * load_sum  // WH: weighted avg
+ *
+ * cfq_rq:
+ *
+ *   runnable_sum = \Sum se->avg.runnable_sum
+ *   runnable_avg = \Sum se->avg.runnable_avg
+ *
+ *   load_sum = \Sum se_weight(se) * se->avg.load_sum  // WH: weighted sum
+ *   load_avg = \Sum se->avg.load_avg
+ */
+
+The following 2 functions are called together to set group load weight.
+
+	update_load_avg(cfs_rq_of(se), se, UPDATE_TG);
+	update_cfs_group(se);
+
+static void update_cfs_group(struct sched_entity *se)
+{
+	struct cfs_rq *gcfs_rq = group_cfs_rq(se);
+	long shares;
+
+	dequeue_load_avg(cfs_rq, se);
+
+	/* calculates ~ tg->shares * grq->load_avg / tg->load_avg */
+	se->load.weight = calc_group_shares(gcfs_rq);
+
+	u32 divider = LOAD_AVG_MAX - 1024 + se->avg.period_contrib;
+	se->avg.load_avg = div_u64(se_weight(se) * se->avg.load_sum, divider);
+
+	enqueue_load_avg(cfs_rq, se);
+}
+
+** load computation
+
+__update_load_avg_se()
+	load     = !!se->on_rq
+	runnable = (task se) ? !!se->on_rq : se->runnable_weight; // h_nr_running
+	running  = cfs_rq->curr == se
+
+__update_load_avg_cfs_rq()
+	load     = scale_load_down(cfs_rq->load.weight),
+	runnable = cfs_rq->h_nr_running,
+	running  = cfs_rq->curr != NULL
+
+update_load_avg(cfs_rq_of(se), se, UPDATE_TG)
+--> __update_load_avg_se()
+--> update_cfs_rq_load_avg(now, cfs_rq);
+    --> __update_load_avg_cfs_rq(u64 now, struct cfs_rq *cfs_rq)
+--> propagate_entity_load_avg(se);
+    // se is managed by cfs_rq, gcfs_rq and se belong to the same group
+    // these functions update se.avg with gcfs_rq.avg and apply change
+    // to cfs_rq.avg
+    --> update_tg_cfs_util(cfs_rq, se, gcfs_rq);
+    --> update_tg_cfs_runnable(cfs_rq, se, gcfs_rq);
+    --> update_tg_cfs_load(cfs_rq, se, gcfs_rq);
+--> attach_entity_load_avg(cfs_rq, se); // for enqueueing a task on a new CPU
+    // add se.avg to cfs_rq.avg
+    --> enqueue_load_avg(cfs_rq, se);
+    --> cfs_rq->avg.util_avg += se->avg.util_avg;
+    --> cfs_rq->avg.util_sum += se->avg.util_sum;
+    --> cfs_rq->avg.runnable_avg += se->avg.runnable_avg;
+    --> cfs_rq->avg.runnable_sum += se->avg.runnable_sum;
+--> update_tg_load_avg(cfs_rq, 0);
+    // sync tg->load_avg with cfs_rq.avg.load_avg
+
+* preemption
+
+PREEMPT_NONE          Server           not while executing kernel code
+PREEMPT_VOLUNTARY     Destop           explicit preemption points
+PREEMPT               Low-Latency      all kernel code can be preempted
+
+Comments before function __schedule()
+
+       - If the kernel is preemptible (CONFIG_PREEMPT=y):
+
+         - in syscall or exception context, at the next outmost
+           preempt_enable(). (this might be as soon as the wake_up()'s
+           spin_unlock()!)
+
+         - in IRQ context, return from interrupt-handler to
+           preemptible context
+
+       - If the kernel is not preemptible (CONFIG_PREEMPT is not set)
+         then at the next:
+
+          - cond_resched() call
+          - explicit schedule() call
+          - return from syscall or exception to user-space
+          - return from interrupt-handler to user-space
+
+* rq
+
+clock         time in ns
+clock_task    clock adjusted with IRQ time
+clock_pelt    clock adjusted with PELT for Energy Aware Scheduling
+
+* task_struct
+
+	/* Context switch counts: */
+	unsigned long			nvcsw;
+	unsigned long			nivcsw;
+
+* statistics
+
+The stats are shown in /proc/$$/sched withthe following settings:
+
+  - CONFIG_SCHEDSTATS
+  - CONFIG_SCHED_DEBUG
+  - kernel.sched_schedstats = 1
+
+exec_max      max delta in exec
+exec_clock    sum delta
+wait_max      max wait time in rq
+
+* code
+/*
+ * delta /= w
+ */
+static inline u64 calc_delta_fair(u64 delta, struct sched_entity *se)
+{
+	if (unlikely(se->load.weight != NICE_0_LOAD))
+		delta = __calc_delta(delta, NICE_0_LOAD, &se->load);
+
+	return delta;
+}
+
+* call stack
+
+__schedule()
+--> update_rq_clock(rq);
+--> next = pick_next_task(rq, prev, &rf); // pick_next_task_fair()
+    --> put_prev_task() // put_prev_task_fair
+        --> put_prev_entity(cfs_rq, se);  // also for all parents
+	    --> __enqueue_entity(cfs_rq, prev);  // put prev back to rq, which was dequeued in set_next_entity
+	    --> update_curr(cfs_rq);
+	        --> curr->vruntime += calc_delta_fair(delta_exec, curr);
+		    --> __calc_delta() // ??
+		--> update_min_vruntime(cfs_rq);
+		--> account_cfs_rq_runtime(cfs_rq, delta_exec);
+            --> check_cfs_rq_runtime(cfs_rq); // throttling
+    --> set_next_entity() // also for all parents
+        --> __dequeue_entity(cfs_rq, se);  // will be enqueued in put_prev_entity()
+--> rq = context_switch(rq, prev, next, &rf);
+--> balance_callback(rq);
+
+_do_fork()
+--> p = copy_process(NULL, trace, NUMA_NO_NODE, args);
+    --> retval = sched_fork(clone_flags, p);
+        --> p->sched_class->task_fork(p); // task_fork_fair()
+	    --> update_rq_clock(rq);
+	    --> update_curr(cfs_rq); // curr is parent
+	    --> se->vruntime = curr->vruntime;
+	    --> place_entity(cfs_rq, se, 1);
+--> wake_up_new_task(p);
+    --> activate_task(rq, p, ENQUEUE_NOCLOCK);
+        --> enqueue_task(rq, p, flags); // enqueue_task_fair()
+	--> p->on_rq = TASK_ON_RQ_QUEUED;
+
+--> cpu_shares_write_u64(struct cgroup_subsys_state *css,...)
+    --> sched_group_set_shares(css_tg(css), scale_load(shareval));
+        --> update_load_avg(cfs_rq_of(se), se, UPDATE_TG); // for each cpu and parent
+	--> update_cfs_group(se); // for each cpu and parent
+
+* Q and A
+
+Q: Is there an epoch that all vruntime starts? What's the initial
+   value of vruntime for a new task?
+
+   There's no epoch for vruntimes.  When a cgroup is created, a cfs_rq
+   is created, with min_vruntime set to 0. When a se is added to the
+   rq, the vruntime is initialized with cfs_rq.min_vruntime.
+
+Q: when does on_rq = 0?
+
+   When the task is current, on_rq = 1 but the se is not on rq.
+   More details in put_prev_entity() and set_next_entity().
+
+Q: does load_weight stores absolute or relative values?
+
+   absolute value
+
+Q: does a multiple thread task get more cpu time?
+
+Q: k8s guranteed Qos
+
+Q: group shares are shared among cpus, but task weight is not.  Does
+   tasks have higher weight than groups when they both have default
+   values (1024 shares and 120 prio)?
+
+* References
+
+** code in 3.6
+
+account_entity_enqueue(struct cfs_rq *cfs_rq, struct sched_entity *se)
+{
+	update_load_add(&cfs_rq->load, se->load.weight);
+	if (!parent_entity(se))
+		update_load_add(&rq_of(cfs_rq)->load, se->load.weight);
+	cfs_rq->nr_running++;
+}
+
+static void
+account_entity_dequeue(struct cfs_rq *cfs_rq, struct sched_entity *se)
+{
+	update_load_sub(&cfs_rq->load, se->load.weight);
+	if (!parent_entity(se))
+		update_load_sub(&rq_of(cfs_rq)->load, se->load.weight);
+	cfs_rq->nr_running--;
+}
+
+static void update_cfs_rq_load_contribution(struct cfs_rq *cfs_rq)
+{
+	struct task_group *tg = cfs_rq->tg;
+	long load_avg, load_delta;
+
+	load_avg = div64_u64(cfs_rq->load_avg, cfs_rq->load_period+1);
+	load_delta = load_avg - cfs_rq->load_contribution;
+	atomic_add(load_delta, &tg->load_weight);
+	cfs_rq->load_contribution = load_avg;
+}
+
+static void update_cfs_load(struct cfs_rq *cfs_rq)
+{
+	u64 period = sysctl_sched_shares_window;
+	u64 now, delta;
+	unsigned long load = cfs_rq->load.weight;
+
+	now = rq_of(cfs_rq)->clock_task;
+	delta = now - cfs_rq->load_stamp;
+
+	cfs_rq->load_stamp = now;
+	cfs_rq->load_period += delta;
+	cfs_rq->load_avg += delta * load;
+
+	update_cfs_rq_load_contribution(cfs_rq, global_update);
+
+	while (cfs_rq->load_period > period) {
+		cfs_rq->load_period /= 2;
+		cfs_rq->load_avg /= 2;
+	}
+}
+
+static long calc_cfs_shares(struct cfs_rq *cfs_rq, struct task_group *tg)
+{
+	long shares;
+
+	shares = tg->shares * cfs_rq->load.weight / tg->load_weight;
+	if (shares < MIN_SHARES)
+		shares = MIN_SHARES;
+	if (shares > tg->shares)
+		shares = tg->shares;
+
+	return shares;
+}
+
+static void update_cfs_shares(struct cfs_rq *cfs_rq)
+{
+	struct task_group *tg;
+	struct sched_entity *se;
+	long shares;
+
+	tg = cfs_rq->tg;
+	se = tg->se[cpu_of(rq_of(cfs_rq))];
+	se->load.weight = calc_cfs_shares(cfs_rq, tg);
+}
+
+The following 2 functions are called together:
+
+	update_cfs_load(cfs_rq, 0);
+	update_cfs_shares(cfs_rq);

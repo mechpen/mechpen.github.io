@@ -10,16 +10,16 @@
 <title>resolv.conf for nameservers with a virtual IP – Mechpen</title>
 
 
-<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="icon" type="image/png" href="/assets/favicon.png" />
+<link rel="stylesheet" href="/assets/style.css" />
 
     
     
     <link href="/assets/prism.css" rel="stylesheet" />
     
-    <link href="/assets/style.css" rel="stylesheet" />
   </head>
 
-  <body>
+  <body class="line-numbers">
     <div>
       <div class="container">
         <header class="masthead clearfix">
@@ -36,8 +36,7 @@
     </div>
 
     <div id="main" role="main" class="container">
-      
-<div class="post">
+      <div class="post">
   <h1>resolv.conf for nameservers with a virtual IP</h1>
 
   <div class="date">
@@ -49,8 +48,8 @@
     <p>The following tests show the difference between 1 entry and 3 entries
 in <code>resolv.conf</code>.  The setup uses a fake nameserver <code>10.10.10.10</code> that
 does not exist.</p>
-<h2 id="single-entry">single entry <a class="header-anchor" href="#single-entry" aria-hidden="true">¶</a></h2>
-<pre class="language-x"><code class="language-x">$ time curl google.com
+<h2 id="single-entry">single entry <a class="header-anchor" href="#single-entry">¶</a></h2>
+<pre><code class="language-text">$ time curl google.com
 curl: (6) Could not resolve host: google.com
 
 real    0m10.124s
@@ -58,11 +57,11 @@ user    0m0.025s
 sys     0m0.008s
 </code></pre>
 <p>Tcpdump:</p>
-<pre class="language-x"><code class="language-x">11:55:00.470327 IP 10.0.0.10.55920 &gt; 10.10.10.10.53: 62314+ A? google.com. (28)
+<pre><code class="language-text">11:55:00.470327 IP 10.0.0.10.55920 &gt; 10.10.10.10.53: 62314+ A? google.com. (28)
 11:55:05.476349 IP 10.0.0.10.55920 &gt; 10.10.10.10.53: 62314+ A? google.com. (28)
 </code></pre>
-<h2 id="3-dup-entries">3 dup entries <a class="header-anchor" href="#3-dup-entries" aria-hidden="true">¶</a></h2>
-<pre class="language-x"><code class="language-x">$ time curl google.com
+<h2 id="3-dup-entries">3 dup entries <a class="header-anchor" href="#3-dup-entries">¶</a></h2>
+<pre><code class="language-text">$ time curl google.com
 curl: (6) Could not resolve host: google.com
 
 real    0m28.193s
@@ -70,7 +69,7 @@ user    0m0.033s
 sys     0m0.018s
 </code></pre>
 <p>Tcpdump:</p>
-<pre class="language-x"><code class="language-x">11:52:38.865095 IP 10.0.0.10.53712 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
+<pre><code class="language-text">11:52:38.865095 IP 10.0.0.10.53712 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
 11:52:43.871066 IP 10.0.0.10.58702 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
 11:52:46.875065 IP 10.0.0.10.51804 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
 11:52:52.882092 IP 10.0.0.10.53712 &gt; 10.10.10.10.53: 21617+ A? google.com. (28)
@@ -96,10 +95,21 @@ nameserver entries,</p>
 Using multiple identical entries diversifies source ports, which in
 turn diversifies the actual nameservers for a single lookup.  So it's
 better to have the following in <code>resolv.conf</code>:</p>
-<pre class="language-x"><code class="language-x">nameserver 10.10.10.10
+<pre><code class="language-text">nameserver 10.10.10.10
 nameserver 10.10.10.10
 nameserver 10.10.10.10
 </code></pre>
+<h2 id="set-different-timeout-and-retries">set different timeout and retries <a class="header-anchor" href="#set-different-timeout-and-retries">¶</a></h2>
+<p><em>Updated at [May/09/2020]</em></p>
+<p>Use the following options to change the default timeout and retries.
+More details at <a href="http://man7.org/linux/man-pages/man5/resolv.conf.5.html">man
+resolv.conf</a>.</p>
+<pre><code class="language-text">options timeout:1
+options retries:5
+</code></pre>
+<p>These options should be used if the DNS servers are just a few hops
+away, such that if no response is received within 1 second, the
+request or response packet must be lost.</p>
 
   </div>
 </div>
@@ -112,6 +122,7 @@ nameserver 10.10.10.10
         crossorigin="anonymous"
         async>
 </script>
+
 
     </div>
   </body>

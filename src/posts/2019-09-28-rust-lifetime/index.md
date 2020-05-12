@@ -4,7 +4,6 @@ tags: [rust]
 list: true
 styles:
 - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css
-- style.css
 excerpt: |
 
   Rust ownership and lifetime are very powerful tools.  They were

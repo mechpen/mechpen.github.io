@@ -202,27 +202,25 @@ nav a {
   background: var(--note-background-color);
 }
 
-/************/
-/* ISSO FIX */
-/************/
-section#isso-thread {
-  margin: 20px 10px 50px 0;
-  font-size: 16px;
-}
-section#isso-thread .textarea-wrapper {
-  color: #000;
-}
-section#isso-thread a:hover {
-  color: var(--link-color) !important;
-  text-shadow: none !important;
-}
-section#isso-thread a.author {
-  color: var(--name-color);
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/*************/
-/* KATEX FIX */
-/*************/
+/**********/
+/* OTHERS */
+/**********/
 .katex {
   font-size: 1.1em;
 }
+
+.badcode + .language-rust {
+  background: #f5e2e0;
+}
+
+.badcode + .language-rust .token.operator, .token.entity, .token.url, .language-css .token.string, .style .token.string {
+  background: #f5e2e0;
+}
+
+/*# sourceMappingURL=style.css.map */

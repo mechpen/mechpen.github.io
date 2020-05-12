@@ -1,0 +1,13 @@
+---
+title: Notes
+
+---
+
+<div class="vskip"></div>
+<div class="notes">
+  {% for page in _pages reversed %}
+  {% if page.type == "note" and page.list  %}
+  <a class="note" href="{{ page._url }}">{{ page.title }}</a>
+  {% endif %}
+  {% endfor %}
+</div>

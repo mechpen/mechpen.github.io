@@ -45,7 +45,7 @@ section of the object file contains the `counter_array` struct.  The
 `counter_array` are not resolved.  The disassembler prints the
 following bpf instructions for the `map_lookup_elem()` function call:
 
-```x
+```text
         18 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00         r1 = 0 ll
         85 00 00 00 01 00 00 00                                 call 1
 ```
@@ -78,7 +78,7 @@ bpf_apply_relo_map()`:
 `BPF_PSEUDO_MAP_FD` is 1, and here the map file descriptor is 6.  The
 bpf instructions now becomes:
 
-```x
+```text
         18 11 00 00 06 00 00 00 00 00 00 00 00 00 00 00
         85 00 00 00 01 00 00 00                        
 ```
@@ -119,7 +119,7 @@ instruction:
 
 Here the map address is `0xffff8881384aa200`.  The final bpf code is:
 
-```x
+```text
         18 01 00 00 00 a2 4a 38 00 00 00 00 81 88 ff ff
         85 00 00 00 30 86 01 00
 ```
@@ -132,7 +132,7 @@ argument `counter_array` is `0xffff8881384aa200`.
 In the original C code, can we use the map address directly when
 calling `map_lookup_elem()` as the following?
 
-```x
+```c
         val = map_lookup_elem((void*)0xffff8881384aa200, &key);
 ```
 
@@ -166,7 +166,7 @@ If we use the real map address in the original C code, this type check
 will fail because the `src` field of the `0x18` instruction is 0 and
 thus the type of register `r1` is not set to `CONST_PTR_TO_MAP`.
 
-## Thoughts
+## Final thoughts
 
 The bpf map in the above example must be created before loading the
 bpf program.  There are cases that maps can only be created after the

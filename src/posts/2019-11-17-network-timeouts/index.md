@@ -133,7 +133,7 @@ These ICMP messages could also be generated with `ip route` command or
 `iptables` command.  For example both the following commands could
 generate `PKT_FILTERED` messages for a destination.
 
-```x
+```text
 # ip route add prohibit <dest>
 # iptables -I FORWARD -d <dest> -j REJECT --reject-with icmp-admin-prohibited
 ```
@@ -239,7 +239,7 @@ The remote peer could also drop `SYN` packets if the socket backlog
 queue is full.  The number of dropped `SYN` packets can be shown with
 the following command:
 
-```x
+```text
 $ netstat -s | grep -i listen
     21 times the listen queue of a socket overflowed
     21 SYNs to LISTEN sockets dropped
@@ -298,7 +298,7 @@ values for these timeout errors:
 All these timeout errors are counted in the SNMP mib
 `TCPABORTONTIMEOUT` and can be shown with the following command:
 
-```x
+```text
 $ netstat -s | grep timeout
     3 connections aborted due to timeout
 ```

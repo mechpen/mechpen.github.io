@@ -1,0 +1,3 @@
+_templateDir: templates
+_copyThrough:
+  - assets

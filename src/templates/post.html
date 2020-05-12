@@ -1,0 +1,19 @@
+---
+_template: default
+
+---
+
+<div class="post">
+  <h1>{{ title }}</h1>
+
+  <div class="date">
+    {{ _date | date: "%B %e, %Y" }}
+  </div>
+
+  <div class="entry">
+    <p>{{ excerpt }}</p>
+    {{ _body }}
+  </div>
+</div>
+<div class="vskip"></div>
+{% include comments.html %}
