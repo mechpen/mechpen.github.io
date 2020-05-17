@@ -2,8 +2,6 @@
 title: Mis-Understanding Rust lifetime
 tags: [rust]
 list: true
-styles:
-- https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css
 excerpt: |
 
   Rust ownership and lifetime are very powerful tools.  They were
@@ -118,12 +116,10 @@ The first simple example is from the
 ```rust
 {
     let r;
-
     {
         let x = 5;
         r = &x;
     }
-
     println!("r: {}", r);
 }
 ```

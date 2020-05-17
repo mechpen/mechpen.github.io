@@ -2,8 +2,6 @@
 title: Linux CFS and task group
 tags: [linux, scheduler]
 list: true
-styles:
-- https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css
 excerpt: |
 
   I dived into the kernel scheduler code under
@@ -109,8 +107,8 @@ CPU time.  The test for this example is
 
 ```c
 struct rq {
-        struct cfs_rq   cfs;
-        ...
+    struct cfs_rq   cfs;
+    ...
 }
 ```
 
@@ -120,17 +118,17 @@ information.
 
 ```c
 struct cfs_rq {
-        struct load_weight      load;
-        unsigned int            nr_running;
-        u64                     min_vruntime;
-        struct rb_root_cached   tasks_timeline;
-	/*
-	 * 'curr' points to currently running entity on this cfs_rq.
-	 * It is set to NULL otherwise (i.e when none are currently running).
-	 */
-	struct sched_entity	*curr;
-	struct task_group       *tg;    /* group that "owns" this runqueue */
-        ...
+    struct load_weight      load;
+    unsigned int            nr_running;
+    u64                     min_vruntime;
+    struct rb_root_cached   tasks_timeline;
+    /*
+     * 'curr' points to currently running entity on this cfs_rq.
+     * It is set to NULL otherwise (i.e when none are currently running).
+     */
+    struct sched_entity     *curr;
+    struct task_group       *tg;    /* group that "owns" this runqueue */
+    ...
 }
 ```
 
@@ -155,31 +153,31 @@ sched_entity`.  The fields of `struct cfs_rq` are as follows:
 
 ```c
 struct sched_entity {
-        struct load_weight              load;
-        struct rb_node                  run_node;
-        u64                             vruntime;
-        struct sched_entity             *parent;
-        /* rq on which this entity is (to be) queued: */
-        struct cfs_rq                   *cfs_rq;
-        /* rq "owned" by this entity/group: */
-        struct cfs_rq                   *my_q;
-        ...
+    struct load_weight              load;
+    struct rb_node                  run_node;
+    u64                             vruntime;
+    struct sched_entity             *parent;
+    /* rq on which this entity is (to be) queued: */
+    struct cfs_rq                   *cfs_rq;
+    /* rq "owned" by this entity/group: */
+    struct cfs_rq                   *my_q;
+    ...
 };
 
 struct task_struct {
-        struct sched_entity             se;
-        struct task_group               *sched_task_group;
-        ...
+    struct sched_entity             se;
+    struct task_group               *sched_task_group;
+    ...
 }
 
 struct task_group {
-        /* schedulable entities of this group on each CPU */
-        struct sched_entity     **se;
-        /* runqueue "owned" by this group on each CPU */
-        struct cfs_rq           **cfs_rq;
-        struct task_group       *parent;
-        unsigned long           shares;
-        ...
+    /* schedulable entities of this group on each CPU */
+    struct sched_entity     **se;
+    /* runqueue "owned" by this group on each CPU */
+    struct cfs_rq           **cfs_rq;
+    struct task_group       *parent;
+    unsigned long           shares;
+    ...
 };
 ```
 
@@ -216,7 +214,7 @@ each `struct task_group` contains one `se` for each CPU.
 The following figure shows an simple example of task group tree and
 the corresponding kernel data structures.
 
-{% loadpgf structs.tex %}
+{% loadPgf structs.tex %}
 
 As shown in the gray sub-figure, The system has a task group `tg1`
 under the root task group.  Process `p1` belongs to `tg1` and process
@@ -239,7 +237,7 @@ _do_fork()
             --> se->vruntime = curr->vruntime  // se is child, curr is parent
             --> place_entity(cfs_rq, se, 1)
                 --> se->vruntime = max(se->vruntime, cfs_rq->min_vruntime+slice)
-            --> se->vruntime -= cfs_rq->min_vruntime  // (1)
+            --> se->vruntime -= cfs_rq->min_vruntime      // (1)
 --> wake_up_new_task(p)
     --> activate_task(rq, p, ENQUEUE_NOCLOCK)
         --> enqueue_task(rq, p, flags)  // enqueue_task_fair()
@@ -258,19 +256,23 @@ is counted as a delta.  And in (2), when enqueuing the child, the
 Function `update_curr()` is called at many places to update `vruntime`
 of the current entity.  The follwoing shows the related code snippet:
 
+<div class=line-numbers>
+
 ```c
 static void update_curr(struct cfs_rq *cfs_rq)
 {
-	struct sched_entity *curr = cfs_rq->curr;
-	u64 now = rq_clock_task(rq_of(cfs_rq));
-	u64 delta_exec;
+    struct sched_entity *curr = cfs_rq->curr;
+    u64 now = rq_clock_task(rq_of(cfs_rq));
+    u64 delta_exec;
 
-	delta_exec = now - curr->exec_start;
-	curr->exec_start = now;
-	curr->vruntime += calc_delta_fair(delta_exec, curr);
-	update_min_vruntime(cfs_rq);
+    delta_exec = now - curr->exec_start;
+    curr->exec_start = now;
+    curr->vruntime += calc_delta_fair(delta_exec, curr);
+    update_min_vruntime(cfs_rq);
 }
 ```
+
+</div>
 
 The new CPU execution time is calculated as `delta_exec`.  Then
 `delta_exec` is scaled to get the `vruntime` increment.
@@ -279,9 +281,9 @@ Function `calc_delta_fair()` multiplies `delta_exec` by a relative
 scale factor and returns
 
 ```text
-		              curr->load.weight
-		delta_exec * ———————————————————
-		                 NICE_0_LOAD
+                              curr->load.weight
+                delta_exec * ———————————————————
+                                 NICE_0_LOAD
 ```
 
 `NICE_0_LOAD` is the default weight (1024) for nice level 0.  So for
@@ -303,45 +305,49 @@ __schedule()
 
 Function `pick_next_task_fair()` could be simplified as follows:
 
+<div class=line-numbers>
+
 ```c
 struct task_struct *
-pick_next_task_fair(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
+pick_next_task_fair(struct rq *rq, struct task_struct *prev)
 {
-	struct cfs_rq *cfs_rq = &rq->cfs;
-	struct sched_entity *se;
-	struct task_struct *p;
+    struct cfs_rq *cfs_rq = &rq->cfs;
+    struct sched_entity *se;
+    struct task_struct *p;
 
-	do {
-		struct sched_entity *curr = cfs_rq->curr;
-		se = pick_next_entity(cfs_rq, curr);
-		cfs_rq = group_cfs_rq(se);
-	} while (cfs_rq);
+    do {
+        struct sched_entity *curr = cfs_rq->curr;
+        se = pick_next_entity(cfs_rq, curr);
+        cfs_rq = group_cfs_rq(se);
+    } while (cfs_rq);
 
-	p = task_of(se);
-	if (prev != p) {
-		struct sched_entity *pse = &prev->se;
+    p = task_of(se);
+    if (prev != p) {
+        struct sched_entity *pse = &prev->se;
 
-		while (!(cfs_rq = is_same_group(se, pse))) {
-			int se_depth = se->depth;
-			int pse_depth = pse->depth;
+        while (!(cfs_rq = is_same_group(se, pse))) {
+            int se_depth = se->depth;
+            int pse_depth = pse->depth;
 
-			if (se_depth <= pse_depth) {
-				put_prev_entity(cfs_rq_of(pse), pse);
-				pse = parent_entity(pse);
-			}
-			if (se_depth >= pse_depth) {
-				set_next_entity(cfs_rq_of(se), se);
-				se = parent_entity(se);
-			}
-		}
+            if (se_depth <= pse_depth) {
+                put_prev_entity(cfs_rq_of(pse), pse);
+                pse = parent_entity(pse);
+            }
+            if (se_depth >= pse_depth) {
+                set_next_entity(cfs_rq_of(se), se);
+                se = parent_entity(se);
+            }
+        }
 
-		put_prev_entity(cfs_rq, pse);
-		set_next_entity(cfs_rq, se);
-	}
+        put_prev_entity(cfs_rq, pse);
+        set_next_entity(cfs_rq, se);
+    }
 
-	return p;
+    return p;
 }
 ```
+
+</div>
 
 #### 1.2.6. Autogrouping
 

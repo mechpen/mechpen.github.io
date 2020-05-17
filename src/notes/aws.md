@@ -20,6 +20,7 @@ list: true
 ## aws cli
 
 who am i:
-```
+
+```text
 aws sts get-caller-identity
 ```

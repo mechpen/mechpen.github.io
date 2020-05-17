@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html>
-  <head>
+<!DOCTYPE html><html><head>
     <meta charset="utf-8">
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,18 +8,26 @@
 <title>Understanding Rust lifetime and mutability – Mechpen</title>
 
 
-<link rel="icon" type="image/png" href="/assets/favicon.png" />
-<link rel="stylesheet" href="/assets/style.css" />
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/style.css">
 
     
     
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet" />
+    <link href="/assets/prism.css" rel="stylesheet">
     
-    <link href="/assets/prism.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
     
   </head>
 
-  <body class="line-numbers">
+  <body>
     <div>
       <div class="container">
         <header class="masthead clearfix">
@@ -55,109 +61,109 @@ summary of my current understandings.
 <p><strong>Immutable rule:</strong> <em>Within the lifetime of an immutable reference to
 a variable, the variable can only be used as immutable references.</em></p>
 <p>Examples:</p>
-<pre><code class="language-rust">struct S{}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">struct</span> S<span class="token punctuation">{</span><span class="token punctuation">}</span>
 
-fn main() {
-    let mut x = S{};
-    let rx = &amp;x;
-    &amp;x;                   // can have another immutable reference
-    // x = S{};           // cannot assign to x
-    // let y = x;         // cannot move
-    // x;                 // cannot implicit move
-    // let mrx = &amp;mut x;  // cannot have mutable reference to x
-    rx;
-}
+<span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> x <span class="token operator">=</span> S<span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> rx <span class="token operator">=</span> <span class="token operator">&amp;</span>x<span class="token punctuation">;</span>
+    <span class="token operator">&amp;</span>x<span class="token punctuation">;</span>                   <span class="token comment">// can have another immutable reference</span>
+    <span class="token comment">// x = S{};           // cannot assign to x</span>
+    <span class="token comment">// let y = x;         // cannot move</span>
+    <span class="token comment">// x;                 // cannot implicit move</span>
+    <span class="token comment">// let mrx = &amp;mut x;  // cannot have mutable reference to x</span>
+    rx<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>Note that if struct <code>S</code> implements the <code>Copy</code> trait, then <code>x</code> can be
 copied, because <code>Copy</code> uses <code>Clone</code>, and <code>Clone::clone(&amp;self)</code> takes
 an immutable reference.</p>
 <p>The following is an example with an explicit lifetime parameter:</p>
-<pre><code class="language-rust">fn foo&lt;'a&gt;(x: &amp;'a u32) -&gt; &amp;'a u32 {
-    &amp;1
-}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> foo<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> u32<span class="token punctuation">)</span> <span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> u32 <span class="token punctuation">{</span>
+    <span class="token operator">&amp;</span><span class="token number">1</span>
+<span class="token punctuation">}</span>
 
-fn main() {
-    let mut x = 1;
-    let ry = foo(&amp;x);
-    // x = 2;             // cannot assign to x
-    ry;
-}
+<span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> x <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> ry <span class="token operator">=</span> <span class="token function">foo</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>x<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// x = 2;             // cannot assign to x</span>
+    ry<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>In the above example, even though the value of <code>x</code> is not related to
 <code>ry</code>, the function call <code>foo(&amp;x)</code> creates a immutable reference of <code>x</code>
 which shares the same lifetime <code>'a</code> with reference <code>ry</code>.</p>
 <p><strong>Mutable rule:</strong> <em>A mutable reference is equivalent to a temporary move.</em></p>
 <p>Examples:</p>
-<pre><code class="language-rust">fn main() {
-    let mut x = 1;
-    let rx = &amp;x;
-    let mrx = &amp;mut x;     // x is temporarily moved to *mrx
-    // x;                 // cannot use x because it is moved to mrx
-    // rx;                // same for rx
-    mrx;                  // move ends after this line
-    x;                    // can use x again after move ends
-}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> x <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> rx <span class="token operator">=</span> <span class="token operator">&amp;</span>x<span class="token punctuation">;</span>
+    <span class="token keyword">let</span> mrx <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> x<span class="token punctuation">;</span>     <span class="token comment">// x is temporarily moved to *mrx</span>
+    <span class="token comment">// x;                 // cannot use x because it is moved to mrx</span>
+    <span class="token comment">// rx;                // same for rx</span>
+    mrx<span class="token punctuation">;</span>                  <span class="token comment">// move ends after this line</span>
+    x<span class="token punctuation">;</span>                    <span class="token comment">// can use x again after move ends</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <h2 id="reborrow">Reborrow <a class="header-anchor" href="#reborrow">¶</a></h2>
 <p>Mutable reference <code>&amp;'a mut T</code> does not implement the <code>Copy</code> trait.
 There are 2 ways of accessing mutable references: move and reborrow.</p>
 <p>A move example:</p>
-<pre><code class="language-rust">fn main() {
-    let x = &amp;mut 1;
-    let y = x;            // move x to y
-    // x;                 // cannot use x
-}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> x <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> y <span class="token operator">=</span> x<span class="token punctuation">;</span>            <span class="token comment">// move x to y</span>
+    <span class="token comment">// x;                 // cannot use x</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>Reborrow is implicitly accessing a mutable reference <code>x</code> as <code>&amp;*x</code> or
 <code>&amp;mut *x</code>.  <code>&amp;*x</code> is the same as immutable reference, and <code>&amp;mut *x</code> is
 the same as mutable reference.  The following shows examples of
 reborrow:</p>
-<pre><code class="language-rust">fn foo(x: &amp;mut u32) {
-    *x = 2;
-}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> <span class="token function">foo</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> u32<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token operator">*</span>x <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 
-fn main() {
-    let x = &amp;mut 1;
-    foo(x);               // reborrow for function argument
-    let y: &amp;u32 = x;      // reborrow: y = &amp;*x
-    let z: &amp;mut u32 = x;  // reborrow: z = &amp;mut *x
-    x;                    // can use x again after temp move ends
-}
+<span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> x <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token function">foo</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span><span class="token punctuation">;</span>               <span class="token comment">// reborrow for function argument</span>
+    <span class="token keyword">let</span> y<span class="token punctuation">:</span> <span class="token operator">&amp;</span>u32 <span class="token operator">=</span> x<span class="token punctuation">;</span>      <span class="token comment">// reborrow: y = &amp;*x</span>
+    <span class="token keyword">let</span> z<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> u32 <span class="token operator">=</span> x<span class="token punctuation">;</span>  <span class="token comment">// reborrow: z = &amp;mut *x</span>
+    x<span class="token punctuation">;</span>                    <span class="token comment">// can use x again after temp move ends</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>Reborrow happens when a mutable reference's type changes.  In the
 above example: <code>let z: &amp;mut u32 = x</code> changes type of <code>x</code> from <code>&amp;'x mut u32</code> to <code>&amp;'z mut u32</code>.  The type change is not necessarily
-&quot;<em>weakening</em>&quot;.  For example, the assignment in the above example: <code>let y: &amp;u32 = x</code>, changes the type of <code>x</code> from a mutable reference to an
+"<em>weakening</em>".  For example, the assignment in the above example: <code>let y: &amp;u32 = x</code>, changes the type of <code>x</code> from a mutable reference to an
 immutable reference.  Immutable references are not supertypes of
 mutable references (<code>&amp;T</code> implements <code>Copy</code> but <code>&amp;mut T</code> does not).</p>
 <p>It is worth noting that the following identity function <code>id()</code> moves
 mutable references instead of reborrow:</p>
-<pre><code class="language-rust">fn id&lt;T&gt;(x: T) -&gt; T {
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> id<span class="token operator">&lt;</span>T<span class="token operator">&gt;</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> T<span class="token punctuation">)</span> <span class="token punctuation">-&gt;</span> T <span class="token punctuation">{</span>
     x
-}
+<span class="token punctuation">}</span>
 
-fn main() {
-    let x = &amp;mut 1;
-    id(x);                // x is moved into id()
-    // x;                 // cannot use x
-}
+<span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> x <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token function">id</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span><span class="token punctuation">;</span>                <span class="token comment">// x is moved into id()</span>
+    <span class="token comment">// x;                 // cannot use x</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>More info about the identity function can be found in this <a href="https://bluss.github.io//rust/fun/2015/10/11/stuff-the-identity-function-does/">blog
 post</a>.</p>
 <h2 id="subtyping">Subtyping <a class="header-anchor" href="#subtyping">¶</a></h2>
-<p>Subtyping &quot;duplicates&quot; a variable with a weaker type.  It happens to
+<p>Subtyping "duplicates" a variable with a weaker type.  It happens to
 all assignments and function arguments when the target type is
-&quot;<em>weakened</em>&quot;.  Subtyping follows the <a href="https://doc.rust-lang.org/nomicon/subtyping.html#variance">variance
+"<em>weakened</em>".  Subtyping follows the <a href="https://doc.rust-lang.org/nomicon/subtyping.html#variance">variance
 rules</a>.</p>
 <p>An example of lifetime subtyping:</p>
-<pre><code class="language-rust">fn foo&lt;'a&gt;(x: &amp;'a mut u32, y: &amp;'a u32) {}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> foo<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> <span class="token keyword">mut</span> u32<span class="token punctuation">,</span> y<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> u32<span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
 
-fn main() {
-    let x = &amp;mut 1;
-    let y = &amp;2;
-    foo(x, y);
-    x;
-    y;
-}
+<span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> x <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> <span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> y <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token number">2</span><span class="token punctuation">;</span>
+    <span class="token function">foo</span><span class="token punctuation">(</span>x<span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    x<span class="token punctuation">;</span>
+    y<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>In the above example, what is the region covered by the lifetime
 parameter <code>'a</code>?</p>
@@ -182,19 +188,19 @@ and copy (<code>y</code>).</p>
 examples.</p>
 <h3 id="example-1">Example 1 <a class="header-anchor" href="#example-1">¶</a></h3>
 <div class="badcode"></div>
-<pre><code class="language-rust">fn get_x&lt;'a, 'b&gt;(x: &amp;'b &amp;'a mut u32) -&gt; &amp;'a u32 {
-    *x
-}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> get_x<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a,</span> <span class="token lifetime-annotation symbol">'b</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'b</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> <span class="token keyword">mut</span> u32<span class="token punctuation">)</span> <span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> u32 <span class="token punctuation">{</span>
+    <span class="token operator">*</span>x
+<span class="token punctuation">}</span>
 </code></pre>
 <p>This above function does not compile.  However, with trivial fixes,
 the following 2 functions compiles:</p>
-<pre><code class="language-rust">fn get_x1&lt;'a, 'b&gt;(x: &amp;'b &amp;'a mut u32) -&gt; &amp;'b u32 {
-    *x
-}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> get_x1<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a,</span> <span class="token lifetime-annotation symbol">'b</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'b</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> <span class="token keyword">mut</span> u32<span class="token punctuation">)</span> <span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'b</span> u32 <span class="token punctuation">{</span>
+    <span class="token operator">*</span>x
+<span class="token punctuation">}</span>
 
-fn get_x2&lt;'a, 'b&gt;(x: &amp;'b &amp;'a u32) -&gt; &amp;'a u32 {
-    *x
-}
+<span class="token keyword">fn</span> get_x2<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a,</span> <span class="token lifetime-annotation symbol">'b</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'b</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> u32<span class="token punctuation">)</span> <span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> u32 <span class="token punctuation">{</span>
+    <span class="token operator">*</span>x
+<span class="token punctuation">}</span>
 </code></pre>
 <p>A mutable reference is equivalent to a temporary move.  So for <code>&amp;'b &amp;'a mut u32</code>, the value is moved to <code>x</code> for lifetime <code>'b</code>, and we cannot
 borrow the value for <code>'a</code> where<code>'a: 'b</code>.  That's why <code>get_x()</code> does
@@ -203,33 +209,33 @@ not compile but <code>get_x1()</code> does.</p>
 <code>get_x2()</code> is good.</p>
 <h3 id="example-2">Example 2 <a class="header-anchor" href="#example-2">¶</a></h3>
 <div class="badcode"></div>
-<pre><code class="language-rust">fn foo&lt;'a, 'b&gt;(x: &amp;'b mut &amp;'a u32, y: &amp;'a mut u32) {}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> foo<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a,</span> <span class="token lifetime-annotation symbol">'b</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'b</span> <span class="token keyword">mut</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> u32<span class="token punctuation">,</span> y<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> <span class="token keyword">mut</span> u32<span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
 
-fn main() {
-    let mut x = &amp;1;
-    let mut y = 2;
-    foo(&amp;mut x, &amp;mut y);
-    y;
-    x;
-}
+<span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> x <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> y <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">;</span>
+    <span class="token function">foo</span><span class="token punctuation">(</span><span class="token operator">&amp;</span><span class="token keyword">mut</span> x<span class="token punctuation">,</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> y<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    y<span class="token punctuation">;</span>
+    x<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>The above code does not compile.  To understand why, we need to find
 out the region of lifetime <code>'a</code>.</p>
 <p>Let's first de-sugar the <code>main()</code> function:</p>
 <div class="badcode"></div>
-<pre><code class="language-rust">fn main() {
-    let mut x = &amp;1;
-    let mut y = 2;
-    let rx = &amp;mut x;
-    let ry = &amp;mut y;
-    foo(rx, ry);
-    y;
-    x;
-}
+<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> x <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token number">1</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> <span class="token keyword">mut</span> y <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> rx <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> x<span class="token punctuation">;</span>
+    <span class="token keyword">let</span> ry <span class="token operator">=</span> <span class="token operator">&amp;</span><span class="token keyword">mut</span> y<span class="token punctuation">;</span>
+    <span class="token function">foo</span><span class="token punctuation">(</span>rx<span class="token punctuation">,</span> ry<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    y<span class="token punctuation">;</span>
+    x<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>When calling function <code>foo()</code>, subtypes of <code>rx</code> and <code>ry</code> are created:</p>
-<pre><code class="language-rust">    rx: &amp;'rx mut &amp;'x u32 --&gt; &amp;'b mut &amp;'a u32
-    ry: &amp;'ry mut u32     --&gt; &amp;'a mut u32
+<pre class=" language-rust"><code class=" language-rust">    rx<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'rx</span> <span class="token keyword">mut</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'x</span> u32 <span class="token operator">-</span><span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'b</span> <span class="token keyword">mut</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> u32
+    ry<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'ry</span> <span class="token keyword">mut</span> u32     <span class="token operator">-</span><span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> <span class="token keyword">mut</span> u32
 </code></pre>
 <p>By the <a href="https://doc.rust-lang.org/nomicon/subtyping.html#variance">variance
 rules</a>,
@@ -243,16 +249,11 @@ compile.</p>
   </div>
 </div>
 <div class="vskip"></div>
-<script src="https://utteranc.es/client.js"
-        repo="mechpen/mechpen.github.io"
-        issue-term="pathname"
-        label="comment"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
+<script src="https://utteranc.es/client.js" repo="mechpen/mechpen.github.io" issue-term="pathname" label="comment" theme="github-light" crossorigin="anonymous" async="">
 </script>
 
 
     </div>
-  </body>
-</html>
+  
+
+</body></html>

@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html>
-  <head>
+<!DOCTYPE html><html><head>
     <meta charset="utf-8">
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,18 +8,26 @@
 <title>Linux CFS and task group – Mechpen</title>
 
 
-<link rel="icon" type="image/png" href="/assets/favicon.png" />
-<link rel="stylesheet" href="/assets/style.css" />
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/style.css">
 
     
     
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet" />
+    <link href="/assets/prism.css" rel="stylesheet">
     
-    <link href="/assets/prism.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
     
   </head>
 
-  <body class="line-numbers">
+  <body>
     <div>
       <div class="container">
         <header class="masthead clearfix">
@@ -115,18 +121,18 @@ following table shows these mappings:</p>
 </table>
 <p>The comment above <code>sched_prio_to_weight</code> explains why 1.25 is used as
 the base for weight calculation:</p>
-<pre><code class="language-c">/*
+<pre class=" language-c"><code class=" language-c"><span class="token comment">/*
  * Nice levels are multiplicative, with a gentle 10% change for every
  * nice level changed. I.e. when a CPU-bound task goes from nice 0 to
  * nice 1, it will get ~10% less CPU time than another CPU-bound task
  * that remained on nice 0.
  *
- * The &quot;10% effect&quot; is relative and cumulative: from _any_ nice level,
+ * The "10% effect" is relative and cumulative: from _any_ nice level,
  * if you go up 1 level, it's -10% CPU usage, if you go down 1 level
  * it's +10% CPU usage. (to achieve that we use a multiplier of 1.25.
  * If a task goes up by ~10% and another task goes down by ~10% then
  * the relative distance between them is ~25%.)
- */
+ */</span>
 </code></pre>
 <p>The above comments doesn't make perfect sense to me.  But we can do a
 few examples to understand the effect of nice levels.</p>
@@ -152,27 +158,27 @@ t_4 = \frac{1024}{820+3\times1024}T \approx 0.2631T</annotation></semantics></ma
 CPU time.  The test for this example is
 <a href="priority-tests.html#test-2">here</a>.</p>
 <h4 id="1.2.2.-data-structures">1.2.2. Data structures <a class="header-anchor" href="#1.2.2.-data-structures">¶</a></h4>
-<pre><code class="language-c">struct rq {
-        struct cfs_rq   cfs;
-        ...
-}
+<pre class=" language-c"><code class=" language-c"><span class="token keyword">struct</span> <span class="token class-name">rq</span> <span class="token punctuation">{</span>
+    <span class="token keyword">struct</span> <span class="token class-name">cfs_rq</span>   cfs<span class="token punctuation">;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p><code>struct rq</code> is the per-CPU data structure that system run queue
 information.  Its <code>cfs</code> field stores the root level CFS run queue
 information.</p>
-<pre><code class="language-c">struct cfs_rq {
-        struct load_weight      load;
-        unsigned int            nr_running;
-        u64                     min_vruntime;
-        struct rb_root_cached   tasks_timeline;
-	/*
-	 * 'curr' points to currently running entity on this cfs_rq.
-	 * It is set to NULL otherwise (i.e when none are currently running).
-	 */
-	struct sched_entity	*curr;
-	struct task_group       *tg;    /* group that &quot;owns&quot; this runqueue */
-        ...
-}
+<pre class=" language-c"><code class=" language-c"><span class="token keyword">struct</span> <span class="token class-name">cfs_rq</span> <span class="token punctuation">{</span>
+    <span class="token keyword">struct</span> <span class="token class-name">load_weight</span>      load<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">int</span>            nr_running<span class="token punctuation">;</span>
+    u64                     min_vruntime<span class="token punctuation">;</span>
+    <span class="token keyword">struct</span> <span class="token class-name">rb_root_cached</span>   tasks_timeline<span class="token punctuation">;</span>
+    <span class="token comment">/*
+     * 'curr' points to currently running entity on this cfs_rq.
+     * It is set to NULL otherwise (i.e when none are currently running).
+     */</span>
+    <span class="token keyword">struct</span> <span class="token class-name">sched_entity</span>     <span class="token operator">*</span>curr<span class="token punctuation">;</span>
+    <span class="token keyword">struct</span> <span class="token class-name">task_group</span>       <span class="token operator">*</span>tg<span class="token punctuation">;</span>    <span class="token comment">/* group that "owns" this runqueue */</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p><code>struct cfs_rq</code> stores information of CFS run queue.  Each CPU has a
 root level <code>cfs_rq</code> data.  Also each task group has one <code>cfs_rq</code> for
@@ -199,33 +205,33 @@ This value is used to initialize the <code>vruntime</code> of a <code>se</code> 
 <p><code>tg</code>: the task group that owns the <code>cfs_rq</code>.</p>
 </li>
 </ul>
-<pre><code class="language-c">struct sched_entity {
-        struct load_weight              load;
-        struct rb_node                  run_node;
-        u64                             vruntime;
-        struct sched_entity             *parent;
-        /* rq on which this entity is (to be) queued: */
-        struct cfs_rq                   *cfs_rq;
-        /* rq &quot;owned&quot; by this entity/group: */
-        struct cfs_rq                   *my_q;
-        ...
-};
+<pre class=" language-c"><code class=" language-c"><span class="token keyword">struct</span> <span class="token class-name">sched_entity</span> <span class="token punctuation">{</span>
+    <span class="token keyword">struct</span> <span class="token class-name">load_weight</span>              load<span class="token punctuation">;</span>
+    <span class="token keyword">struct</span> <span class="token class-name">rb_node</span>                  run_node<span class="token punctuation">;</span>
+    u64                             vruntime<span class="token punctuation">;</span>
+    <span class="token keyword">struct</span> <span class="token class-name">sched_entity</span>             <span class="token operator">*</span>parent<span class="token punctuation">;</span>
+    <span class="token comment">/* rq on which this entity is (to be) queued: */</span>
+    <span class="token keyword">struct</span> <span class="token class-name">cfs_rq</span>                   <span class="token operator">*</span>cfs_rq<span class="token punctuation">;</span>
+    <span class="token comment">/* rq "owned" by this entity/group: */</span>
+    <span class="token keyword">struct</span> <span class="token class-name">cfs_rq</span>                   <span class="token operator">*</span>my_q<span class="token punctuation">;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
 
-struct task_struct {
-        struct sched_entity             se;
-        struct task_group               *sched_task_group;
-        ...
-}
+<span class="token keyword">struct</span> <span class="token class-name">task_struct</span> <span class="token punctuation">{</span>
+    <span class="token keyword">struct</span> <span class="token class-name">sched_entity</span>             se<span class="token punctuation">;</span>
+    <span class="token keyword">struct</span> <span class="token class-name">task_group</span>               <span class="token operator">*</span>sched_task_group<span class="token punctuation">;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span>
 
-struct task_group {
-        /* schedulable entities of this group on each CPU */
-        struct sched_entity     **se;
-        /* runqueue &quot;owned&quot; by this group on each CPU */
-        struct cfs_rq           **cfs_rq;
-        struct task_group       *parent;
-        unsigned long           shares;
-        ...
-};
+<span class="token keyword">struct</span> <span class="token class-name">task_group</span> <span class="token punctuation">{</span>
+    <span class="token comment">/* schedulable entities of this group on each CPU */</span>
+    <span class="token keyword">struct</span> <span class="token class-name">sched_entity</span>     <span class="token operator">*</span><span class="token operator">*</span>se<span class="token punctuation">;</span>
+    <span class="token comment">/* runqueue "owned" by this group on each CPU */</span>
+    <span class="token keyword">struct</span> <span class="token class-name">cfs_rq</span>           <span class="token operator">*</span><span class="token operator">*</span>cfs_rq<span class="token punctuation">;</span>
+    <span class="token keyword">struct</span> <span class="token class-name">task_group</span>       <span class="token operator">*</span>parent<span class="token punctuation">;</span>
+    <span class="token keyword">unsigned</span> <span class="token keyword">long</span>           shares<span class="token punctuation">;</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
 </code></pre>
 <p><code>struct sched_entity</code> stores scheduling information.  Each <code>struct task_struct</code> contains a <code>se</code> field of <code>struct sched_entity</code>.  Also
 each <code>struct task_group</code> contains one <code>se</code> for each CPU.</p>
@@ -269,7 +275,7 @@ point computation.</p>
 </ul>
 <p>The following figure shows an simple example of task group tree and
 the corresponding kernel data structures.</p>
-<p><img src="structs.png" /></p>
+<img src="/posts/2020-04-27-cfs-group/structs.png">
 <p>As shown in the gray sub-figure, The system has a task group <code>tg1</code>
 under the root task group.  Process <code>p1</code> belongs to <code>tg1</code> and process
 <code>p2</code> belongs to the root task group.  Both <code>p1</code> and <code>p2</code> are running
@@ -279,19 +285,19 @@ in the <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi
 <p>When a <code>se</code> is added to a <code>cfs_rq</code>, the <code>se-&gt;vruntime</code> is initialized
 using the <code>cfs_rq-&gt;min_vruntime</code>.  For example, the following is a
 code trace for the <code>fork()</code> syscall:</p>
-<pre><code class="language-c">_do_fork()
---&gt; p = copy_process(NULL, trace, NUMA_NO_NODE, args)
-    --&gt; retval = sched_fork(clone_flags, p)
-        --&gt; p-&gt;sched_class-&gt;task_fork(p)       // task_fork_fair()
-            --&gt; se-&gt;vruntime = curr-&gt;vruntime  // se is child, curr is parent
-            --&gt; place_entity(cfs_rq, se, 1)
-                --&gt; se-&gt;vruntime = max(se-&gt;vruntime, cfs_rq-&gt;min_vruntime+slice)
-            --&gt; se-&gt;vruntime -= cfs_rq-&gt;min_vruntime  // (1)
---&gt; wake_up_new_task(p)
-    --&gt; activate_task(rq, p, ENQUEUE_NOCLOCK)
-        --&gt; enqueue_task(rq, p, flags)  // enqueue_task_fair()
-            --&gt; enqueue_entity(cfs_rq, se, flags)
-                --&gt; se-&gt;vruntime += cfs_rq-&gt;min_vruntime  // (2)
+<pre class=" language-c"><code class=" language-c"><span class="token function">_do_fork</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token operator">--</span><span class="token operator">&gt;</span> p <span class="token operator">=</span> <span class="token function">copy_process</span><span class="token punctuation">(</span><span class="token constant">NULL</span><span class="token punctuation">,</span> trace<span class="token punctuation">,</span> NUMA_NO_NODE<span class="token punctuation">,</span> args<span class="token punctuation">)</span>
+    <span class="token operator">--</span><span class="token operator">&gt;</span> retval <span class="token operator">=</span> <span class="token function">sched_fork</span><span class="token punctuation">(</span>clone_flags<span class="token punctuation">,</span> p<span class="token punctuation">)</span>
+        <span class="token operator">--</span><span class="token operator">&gt;</span> p<span class="token operator">-&gt;</span>sched_class<span class="token operator">-&gt;</span><span class="token function">task_fork</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>       <span class="token comment">// task_fork_fair()</span>
+            <span class="token operator">--</span><span class="token operator">&gt;</span> se<span class="token operator">-&gt;</span>vruntime <span class="token operator">=</span> curr<span class="token operator">-&gt;</span>vruntime  <span class="token comment">// se is child, curr is parent</span>
+            <span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">place_entity</span><span class="token punctuation">(</span>cfs_rq<span class="token punctuation">,</span> se<span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span>
+                <span class="token operator">--</span><span class="token operator">&gt;</span> se<span class="token operator">-&gt;</span>vruntime <span class="token operator">=</span> <span class="token function">max</span><span class="token punctuation">(</span>se<span class="token operator">-&gt;</span>vruntime<span class="token punctuation">,</span> cfs_rq<span class="token operator">-&gt;</span>min_vruntime<span class="token operator">+</span>slice<span class="token punctuation">)</span>
+            <span class="token operator">--</span><span class="token operator">&gt;</span> se<span class="token operator">-&gt;</span>vruntime <span class="token operator">-=</span> cfs_rq<span class="token operator">-&gt;</span>min_vruntime      <span class="token comment">// (1)</span>
+<span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">wake_up_new_task</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span>
+    <span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">activate_task</span><span class="token punctuation">(</span>rq<span class="token punctuation">,</span> p<span class="token punctuation">,</span> ENQUEUE_NOCLOCK<span class="token punctuation">)</span>
+        <span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">enqueue_task</span><span class="token punctuation">(</span>rq<span class="token punctuation">,</span> p<span class="token punctuation">,</span> flags<span class="token punctuation">)</span>  <span class="token comment">// enqueue_task_fair()</span>
+            <span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">enqueue_entity</span><span class="token punctuation">(</span>cfs_rq<span class="token punctuation">,</span> se<span class="token punctuation">,</span> flags<span class="token punctuation">)</span>
+                <span class="token operator">--</span><span class="token operator">&gt;</span> se<span class="token operator">-&gt;</span>vruntime <span class="token operator">+=</span> cfs_rq<span class="token operator">-&gt;</span>min_vruntime  <span class="token comment">// (2)</span>
 </code></pre>
 <p>In function <code>place_entity()</code>, <code>vruntime</code> of the child process is set
 according to <code>min_vruntime</code> of the <code>cfs_rq</code>.  In (1), the <code>vruntime</code>
@@ -301,25 +307,26 @@ is counted as a delta.  And in (2), when enqueuing the child, the
 <h4 id="1.2.4.-updating-vruntime">1.2.4. Updating <code>vruntime</code> <a class="header-anchor" href="#1.2.4.-updating-vruntime">¶</a></h4>
 <p>Function <code>update_curr()</code> is called at many places to update <code>vruntime</code>
 of the current entity.  The follwoing shows the related code snippet:</p>
-<pre><code class="language-c">static void update_curr(struct cfs_rq *cfs_rq)
-{
-	struct sched_entity *curr = cfs_rq-&gt;curr;
-	u64 now = rq_clock_task(rq_of(cfs_rq));
-	u64 delta_exec;
-
-	delta_exec = now - curr-&gt;exec_start;
-	curr-&gt;exec_start = now;
-	curr-&gt;vruntime += calc_delta_fair(delta_exec, curr);
-	update_min_vruntime(cfs_rq);
-}
-</code></pre>
+<div class="line-numbers">
+<pre class=" language-c"><code class=" language-c"><span class="line-numbers-row"></span><span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">update_curr</span><span class="token punctuation">(</span><span class="token keyword">struct</span> <span class="token class-name">cfs_rq</span> <span class="token operator">*</span>cfs_rq<span class="token punctuation">)</span>
+<span class="line-numbers-row"></span><span class="token punctuation">{</span>
+<span class="line-numbers-row"></span>    <span class="token keyword">struct</span> <span class="token class-name">sched_entity</span> <span class="token operator">*</span>curr <span class="token operator">=</span> cfs_rq<span class="token operator">-&gt;</span>curr<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    u64 now <span class="token operator">=</span> <span class="token function">rq_clock_task</span><span class="token punctuation">(</span><span class="token function">rq_of</span><span class="token punctuation">(</span>cfs_rq<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    u64 delta_exec<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>
+<span class="line-numbers-row"></span>    delta_exec <span class="token operator">=</span> now <span class="token operator">-</span> curr<span class="token operator">-&gt;</span>exec_start<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    curr<span class="token operator">-&gt;</span>exec_start <span class="token operator">=</span> now<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    curr<span class="token operator">-&gt;</span>vruntime <span class="token operator">+=</span> <span class="token function">calc_delta_fair</span><span class="token punctuation">(</span>delta_exec<span class="token punctuation">,</span> curr<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    <span class="token function">update_min_vruntime</span><span class="token punctuation">(</span>cfs_rq<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span><span class="token punctuation">}</span></code></pre>
+</div>
 <p>The new CPU execution time is calculated as <code>delta_exec</code>.  Then
 <code>delta_exec</code> is scaled to get the <code>vruntime</code> increment.</p>
 <p>Function <code>calc_delta_fair()</code> multiplies <code>delta_exec</code> by a relative
 scale factor and returns</p>
-<pre><code class="language-text">		              curr-&gt;load.weight
-		delta_exec * ———————————————————
-		                 NICE_0_LOAD
+<pre class=" language-text"><code class=" language-text">                              curr-&gt;load.weight
+                delta_exec * ———————————————————
+                                 NICE_0_LOAD
 </code></pre>
 <p><code>NICE_0_LOAD</code> is the default weight (1024) for nice level 0.  So for
 any processe with the default nice level, its <code>vruntime</code> equals to its
@@ -328,49 +335,50 @@ physical CPU run time.</p>
 function <code>update_min_vruntime()</code>.</p>
 <h4 id="1.2.5.-scheduling">1.2.5. Scheduling <a class="header-anchor" href="#1.2.5.-scheduling">¶</a></h4>
 <p>The following shows the code trace of function <code>__schedule()</code>:</p>
-<pre><code class="language-c">__schedule()
---&gt; next = pick_next_task(rq, prev, &amp;rf)  // pick_next_task_fair()
---&gt; rq = context_switch(rq, prev, next, &amp;rf);
+<pre class=" language-c"><code class=" language-c"><span class="token function">__schedule</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token operator">--</span><span class="token operator">&gt;</span> next <span class="token operator">=</span> <span class="token function">pick_next_task</span><span class="token punctuation">(</span>rq<span class="token punctuation">,</span> prev<span class="token punctuation">,</span> <span class="token operator">&amp;</span>rf<span class="token punctuation">)</span>  <span class="token comment">// pick_next_task_fair()</span>
+<span class="token operator">--</span><span class="token operator">&gt;</span> rq <span class="token operator">=</span> <span class="token function">context_switch</span><span class="token punctuation">(</span>rq<span class="token punctuation">,</span> prev<span class="token punctuation">,</span> next<span class="token punctuation">,</span> <span class="token operator">&amp;</span>rf<span class="token punctuation">)</span><span class="token punctuation">;</span>
 </code></pre>
 <p>Function <code>pick_next_task_fair()</code> could be simplified as follows:</p>
-<pre><code class="language-c">struct task_struct *
-pick_next_task_fair(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
-{
-	struct cfs_rq *cfs_rq = &amp;rq-&gt;cfs;
-	struct sched_entity *se;
-	struct task_struct *p;
-
-	do {
-		struct sched_entity *curr = cfs_rq-&gt;curr;
-		se = pick_next_entity(cfs_rq, curr);
-		cfs_rq = group_cfs_rq(se);
-	} while (cfs_rq);
-
-	p = task_of(se);
-	if (prev != p) {
-		struct sched_entity *pse = &amp;prev-&gt;se;
-
-		while (!(cfs_rq = is_same_group(se, pse))) {
-			int se_depth = se-&gt;depth;
-			int pse_depth = pse-&gt;depth;
-
-			if (se_depth &lt;= pse_depth) {
-				put_prev_entity(cfs_rq_of(pse), pse);
-				pse = parent_entity(pse);
-			}
-			if (se_depth &gt;= pse_depth) {
-				set_next_entity(cfs_rq_of(se), se);
-				se = parent_entity(se);
-			}
-		}
-
-		put_prev_entity(cfs_rq, pse);
-		set_next_entity(cfs_rq, se);
-	}
-
-	return p;
-}
-</code></pre>
+<div class="line-numbers">
+<pre class=" language-c"><code class=" language-c"><span class="line-numbers-row"></span><span class="token keyword">struct</span> <span class="token class-name">task_struct</span> <span class="token operator">*</span>
+<span class="line-numbers-row"></span><span class="token function">pick_next_task_fair</span><span class="token punctuation">(</span><span class="token keyword">struct</span> <span class="token class-name">rq</span> <span class="token operator">*</span>rq<span class="token punctuation">,</span> <span class="token keyword">struct</span> <span class="token class-name">task_struct</span> <span class="token operator">*</span>prev<span class="token punctuation">)</span>
+<span class="line-numbers-row"></span><span class="token punctuation">{</span>
+<span class="line-numbers-row"></span>    <span class="token keyword">struct</span> <span class="token class-name">cfs_rq</span> <span class="token operator">*</span>cfs_rq <span class="token operator">=</span> <span class="token operator">&amp;</span>rq<span class="token operator">-&gt;</span>cfs<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    <span class="token keyword">struct</span> <span class="token class-name">sched_entity</span> <span class="token operator">*</span>se<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    <span class="token keyword">struct</span> <span class="token class-name">task_struct</span> <span class="token operator">*</span>p<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>
+<span class="line-numbers-row"></span>    <span class="token keyword">do</span> <span class="token punctuation">{</span>
+<span class="line-numbers-row"></span>        <span class="token keyword">struct</span> <span class="token class-name">sched_entity</span> <span class="token operator">*</span>curr <span class="token operator">=</span> cfs_rq<span class="token operator">-&gt;</span>curr<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>        se <span class="token operator">=</span> <span class="token function">pick_next_entity</span><span class="token punctuation">(</span>cfs_rq<span class="token punctuation">,</span> curr<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>        cfs_rq <span class="token operator">=</span> <span class="token function">group_cfs_rq</span><span class="token punctuation">(</span>se<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    <span class="token punctuation">}</span> <span class="token keyword">while</span> <span class="token punctuation">(</span>cfs_rq<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>
+<span class="line-numbers-row"></span>    p <span class="token operator">=</span> <span class="token function">task_of</span><span class="token punctuation">(</span>se<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    <span class="token keyword">if</span> <span class="token punctuation">(</span>prev <span class="token operator">!=</span> p<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="line-numbers-row"></span>        <span class="token keyword">struct</span> <span class="token class-name">sched_entity</span> <span class="token operator">*</span>pse <span class="token operator">=</span> <span class="token operator">&amp;</span>prev<span class="token operator">-&gt;</span>se<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>
+<span class="line-numbers-row"></span>        <span class="token keyword">while</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token punctuation">(</span>cfs_rq <span class="token operator">=</span> <span class="token function">is_same_group</span><span class="token punctuation">(</span>se<span class="token punctuation">,</span> pse<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="line-numbers-row"></span>            <span class="token keyword">int</span> se_depth <span class="token operator">=</span> se<span class="token operator">-&gt;</span>depth<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>            <span class="token keyword">int</span> pse_depth <span class="token operator">=</span> pse<span class="token operator">-&gt;</span>depth<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>
+<span class="line-numbers-row"></span>            <span class="token keyword">if</span> <span class="token punctuation">(</span>se_depth <span class="token operator">&lt;=</span> pse_depth<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="line-numbers-row"></span>                <span class="token function">put_prev_entity</span><span class="token punctuation">(</span><span class="token function">cfs_rq_of</span><span class="token punctuation">(</span>pse<span class="token punctuation">)</span><span class="token punctuation">,</span> pse<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>                pse <span class="token operator">=</span> <span class="token function">parent_entity</span><span class="token punctuation">(</span>pse<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>            <span class="token punctuation">}</span>
+<span class="line-numbers-row"></span>            <span class="token keyword">if</span> <span class="token punctuation">(</span>se_depth <span class="token operator">&gt;=</span> pse_depth<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<span class="line-numbers-row"></span>                <span class="token function">set_next_entity</span><span class="token punctuation">(</span><span class="token function">cfs_rq_of</span><span class="token punctuation">(</span>se<span class="token punctuation">)</span><span class="token punctuation">,</span> se<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>                se <span class="token operator">=</span> <span class="token function">parent_entity</span><span class="token punctuation">(</span>se<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>            <span class="token punctuation">}</span>
+<span class="line-numbers-row"></span>        <span class="token punctuation">}</span>
+<span class="line-numbers-row"></span>
+<span class="line-numbers-row"></span>        <span class="token function">put_prev_entity</span><span class="token punctuation">(</span>cfs_rq<span class="token punctuation">,</span> pse<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>        <span class="token function">set_next_entity</span><span class="token punctuation">(</span>cfs_rq<span class="token punctuation">,</span> se<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="line-numbers-row"></span>    <span class="token punctuation">}</span>
+<span class="line-numbers-row"></span>
+<span class="line-numbers-row"></span>    <span class="token keyword">return</span> p<span class="token punctuation">;</span>
+<span class="line-numbers-row"></span><span class="token punctuation">}</span></code></pre>
+</div>
 <h4 id="1.2.6.-autogrouping">1.2.6. Autogrouping <a class="header-anchor" href="#1.2.6.-autogrouping">¶</a></h4>
 <p>You may be suprised when setting process priority does not take any
 effect.  This is normally due to the autogroup feature.  When this
@@ -385,16 +393,11 @@ for more info about the autogroup feature.  See the following
   </div>
 </div>
 <div class="vskip"></div>
-<script src="https://utteranc.es/client.js"
-        repo="mechpen/mechpen.github.io"
-        issue-term="pathname"
-        label="comment"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
+<script src="https://utteranc.es/client.js" repo="mechpen/mechpen.github.io" issue-term="pathname" label="comment" theme="github-light" crossorigin="anonymous" async="">
 </script>
 
 
     </div>
-  </body>
-</html>
+  
+
+</body></html>

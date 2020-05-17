@@ -2,8 +2,6 @@
 title: Understanding Rust lifetime and mutability
 tags: [rust]
 list: true
-styles:
-- https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css
 excerpt: |
 
   Lifetime and mutability are simple concepts.  However, when combined

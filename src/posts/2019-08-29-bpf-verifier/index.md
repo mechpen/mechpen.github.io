@@ -13,7 +13,7 @@ excerpt:
 
 ## The faulty code
 
-At first I used the following [code]({% srclink demo_bad.c %}) to
+At first I used the following [code]({% srcLink demo_bad.c %}) to
 access skb data:
 
 ```c
@@ -66,7 +66,7 @@ field to compute IP header length, then it reads the TCP header `doff`
 field to compute TCP header length.  Both accesses are guarded by the
 macro `ensure_header()` to ensure that data is available.
 
-The clang compiler generates the following bpf [assembly]({% srclink demo_bad.s %}):
+The clang compiler generates the following bpf [assembly]({% srcLink demo_bad.s %}):
 
 ```text
        0: 	r6 = r1
@@ -188,7 +188,7 @@ We could improve the bpf verifier to make it more flexible.  On the
 other hand, we could write C code in a certain way to make the
 compiler generate the desired instructions.
 
-The following is the valid [code]({% srclink demo_good.c %}) that I
+The following is the valid [code]({% srcLink demo_good.c %}) that I
 came up with:
 
 ```c
@@ -237,8 +237,8 @@ int handle_skb(struct sk_buff *skb)
 
 ## Source code
 
-- [demo_common.h]({% srclink demo_common.h %})
-- [demo_bad.c]({% srclink demo_bad.c %})
-- [demo_good.c]({% srclink demo_good.c %})
+- [demo_common.h]({% srcLink demo_common.h %})
+- [demo_bad.c]({% srcLink demo_bad.c %})
+- [demo_good.c]({% srcLink demo_good.c %})
 
 [comments]: https://github.com/torvalds/linux/blob/9cf6b756cdf2cd38b8b0dac2567f7c6daf5e79d5/kernel/bpf/verifier.c#L5120-L5160

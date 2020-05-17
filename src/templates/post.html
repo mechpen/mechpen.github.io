@@ -1,5 +1,5 @@
 ---
-_template: default
+template: default.html
 
 ---
 
@@ -7,12 +7,12 @@ _template: default
   <h1>{{ title }}</h1>
 
   <div class="date">
-    {{ _date | date: "%B %e, %Y" }}
+    {{ date | date: "%B %e, %Y" }}
   </div>
 
   <div class="entry">
     <p>{{ excerpt }}</p>
-    {{ _body }}
+    {{ content }}
   </div>
 </div>
 <div class="vskip"></div>
