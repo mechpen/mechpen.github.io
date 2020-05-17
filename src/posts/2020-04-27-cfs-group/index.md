@@ -1,7 +1,7 @@
 ---
 title: Linux CFS and task group
 tags: [linux, scheduler]
-list: true
+list: false
 excerpt: |
 
   I dived into the kernel scheduler code under
