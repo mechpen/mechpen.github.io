@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html>
-  <head>
+<!DOCTYPE html><html><head>
     <meta charset="utf-8">
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,16 +8,26 @@
 <title>Workaround for a bpf verifier error – Mechpen</title>
 
 
-<link rel="icon" type="image/png" href="/assets/favicon.png" />
-<link rel="stylesheet" href="/assets/style.css" />
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/style.css">
 
     
     
-    <link href="/assets/prism.css" rel="stylesheet" />
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
     
   </head>
 
-  <body class="line-numbers">
+  <body>
     <div>
       <div class="container">
         <header class="masthead clearfix">
@@ -46,9 +54,9 @@
   <div class="entry">
     <p>Linux bpf verifier allows only one specific pattern for accessing skb data.  To help the clang compiler generate the required access pattern, we have to write C code in a certain way to reflect this pattern.</p>
     <h2 id="the-faulty-code">The faulty code <a class="header-anchor" href="#the-faulty-code">¶</a></h2>
-<p>At first I used the following [code](https://github.com/mechpen/mechpen.github.io/blob/src/posts/2019-08-29-bpf-verifier/demo_bad.c) to
+<p>At first I used the following <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_bad.c">code</a> to
 access skb data:</p>
-<pre><code class="language-c">#define ensure_header(skb, offset, hdr)				\
+<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">define</span> ensure_header(skb, offset, hdr)				\
 ({								\
 	u32 tot_len = offset + sizeof(*hdr);			\
 	void *data = (void *)(long)skb-&gt;data;			\
@@ -65,38 +73,38 @@ access skb data:</p>
 	}							\
 								\
 	hdr = (void *)(data + offset);				\
-})
+})</span>
 
-__attribute__((section(&quot;main&quot;)))
-int handle_skb(struct sk_buff *skb)
-{
-	u32 hdrlen, offset;
-	struct iphdr *ip4;
-	struct tcphdr *tcp;
-	char fmt[] = &quot;%d\n&quot;;
+<span class="token keyword">__attribute__</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token function">section</span><span class="token punctuation">(</span><span class="token string">"main"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">int</span> <span class="token function">handle_skb</span><span class="token punctuation">(</span><span class="token keyword">struct</span> <span class="token class-name">sk_buff</span> <span class="token operator">*</span>skb<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+	u32 hdrlen<span class="token punctuation">,</span> offset<span class="token punctuation">;</span>
+	<span class="token keyword">struct</span> <span class="token class-name">iphdr</span> <span class="token operator">*</span>ip4<span class="token punctuation">;</span>
+	<span class="token keyword">struct</span> <span class="token class-name">tcphdr</span> <span class="token operator">*</span>tcp<span class="token punctuation">;</span>
+	<span class="token keyword">char</span> fmt<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">"%d\n"</span><span class="token punctuation">;</span>
 
-	offset = ETH_HLEN;
-	ensure_header(skb, offset, ip4);
+	offset <span class="token operator">=</span> ETH_HLEN<span class="token punctuation">;</span>
+	<span class="token function">ensure_header</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> offset<span class="token punctuation">,</span> ip4<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
-	hdrlen = ipv4_hdrlen(ip4);
-	if (hdrlen &lt; sizeof(*ip4))
-		return TC_ACT_OK;
+	hdrlen <span class="token operator">=</span> <span class="token function">ipv4_hdrlen</span><span class="token punctuation">(</span>ip4<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>hdrlen <span class="token operator">&lt;</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span><span class="token operator">*</span>ip4<span class="token punctuation">)</span><span class="token punctuation">)</span>
+		<span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
 
-	offset += hdrlen;
-	ensure_header(skb, offset, tcp);
+	offset <span class="token operator">+=</span> hdrlen<span class="token punctuation">;</span>
+	<span class="token function">ensure_header</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> offset<span class="token punctuation">,</span> tcp<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
-	hdrlen = tcp_hdrlen(tcp);
-	bpf_trace_printk(fmt, 4, hdrlen);
+	hdrlen <span class="token operator">=</span> <span class="token function">tcp_hdrlen</span><span class="token punctuation">(</span>tcp<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">bpf_trace_printk</span><span class="token punctuation">(</span>fmt<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> hdrlen<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
-	return TC_ACT_OK;
-}
+	<span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>The code access skb data twice.  First it reads the IP header <code>ihl</code>
 field to compute IP header length, then it reads the TCP header <code>doff</code>
 field to compute TCP header length.  Both accesses are guarded by the
 macro <code>ensure_header()</code> to ensure that data is available.</p>
-<p>The clang compiler generates the following bpf [assembly](https://github.com/mechpen/mechpen.github.io/blob/src/posts/2019-08-29-bpf-verifier/demo_bad.s):</p>
-<pre><code class="language-text">       0: 	r6 = r1
+<p>The clang compiler generates the following bpf <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_bad.s">assembly</a>:</p>
+<pre class=" language-text"><code class=" language-text">       0: 	r6 = r1
        1: 	r1 = 680997
        2: 	*(u32 *)(r10 - 4) = r1
        3: 	r2 = *(u32 *)(r6 + 80)        ; data_end = skb-&gt;data_end
@@ -147,7 +155,7 @@ LBB0_6:
 </code></pre>
 <p>When loading the bpf program, the verifier rejects the program with an
 error:</p>
-<pre><code class="language-text"># tc filter add dev wlan0 egress bpf da obj demo_bad.o sec main
+<pre class=" language-text"><code class=" language-text"># tc filter add dev wlan0 egress bpf da obj demo_bad.o sec main
 ...
 36: (71) r3 = *(u8 *)(r1 +12)
 invalid access to packet, off=12 size=1, R1(id=3,off=0,r=0)
@@ -164,7 +172,7 @@ the verifier is happy.</p>
 <p>After a little bit reading of the bpf verifier, I found that bpf
 packet access instructions should follow a pattern similar to
 <code>#13-#16</code> in the above assembly code:</p>
-<pre><code class="language-text">      13: 	r3 = r1			      ; r1 is skb-&gt;data + x
+<pre class=" language-text"><code class=" language-text">      13: 	r3 = r1			      ; r1 is skb-&gt;data + x
       14: 	r3 += 34
       15: 	if r3 &gt; r2 goto +27 &lt;LBB0_6&gt;  ; if (data + tot_len &gt; data_end)
       16: 	r8 = *(u8 *)(r1 + 14)         ; r8 = ip4-&gt;ihl
@@ -201,9 +209,9 @@ this access pattern.</p>
 <p>We could improve the bpf verifier to make it more flexible.  On the
 other hand, we could write C code in a certain way to make the
 compiler generate the desired instructions.</p>
-<p>The following is the valid [code](https://github.com/mechpen/mechpen.github.io/blob/src/posts/2019-08-29-bpf-verifier/demo_good.c) that I
+<p>The following is the valid <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_good.c">code</a> that I
 came up with:</p>
-<pre><code class="language-c">#define ensure_header(skb, var_off, const_off, hdr)		\
+<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">define</span> ensure_header(skb, var_off, const_off, hdr)		\
 ({								\
 	u32 len = const_off + sizeof(*hdr);			\
 	void *data = (void *)(long)skb-&gt;data + var_off;		\
@@ -218,53 +226,48 @@ came up with:</p>
 		return TC_ACT_OK;				\
 								\
 	hdr = (void *)(data + const_off);			\
-})
+})</span>
 
-__attribute__((section(&quot;main&quot;)))
-int handle_skb(struct sk_buff *skb)
-{
-	u32 hdrlen, var_off, const_off;
-	struct iphdr *ip4;
-	struct tcphdr *tcp;
-	char fmt[] = &quot;%d\n&quot;;
+<span class="token keyword">__attribute__</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token function">section</span><span class="token punctuation">(</span><span class="token string">"main"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">int</span> <span class="token function">handle_skb</span><span class="token punctuation">(</span><span class="token keyword">struct</span> <span class="token class-name">sk_buff</span> <span class="token operator">*</span>skb<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+	u32 hdrlen<span class="token punctuation">,</span> var_off<span class="token punctuation">,</span> const_off<span class="token punctuation">;</span>
+	<span class="token keyword">struct</span> <span class="token class-name">iphdr</span> <span class="token operator">*</span>ip4<span class="token punctuation">;</span>
+	<span class="token keyword">struct</span> <span class="token class-name">tcphdr</span> <span class="token operator">*</span>tcp<span class="token punctuation">;</span>
+	<span class="token keyword">char</span> fmt<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">"%d\n"</span><span class="token punctuation">;</span>
 
-	var_off = 0;
-	const_off = ETH_HLEN;
-	ensure_header(skb, var_off, const_off, ip4);
+	var_off <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+	const_off <span class="token operator">=</span> ETH_HLEN<span class="token punctuation">;</span>
+	<span class="token function">ensure_header</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> var_off<span class="token punctuation">,</span> const_off<span class="token punctuation">,</span> ip4<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
-	hdrlen = ipv4_hdrlen(ip4);
-	if (hdrlen &lt; sizeof(*ip4))
-		return TC_ACT_OK;
+	hdrlen <span class="token operator">=</span> <span class="token function">ipv4_hdrlen</span><span class="token punctuation">(</span>ip4<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>hdrlen <span class="token operator">&lt;</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span><span class="token operator">*</span>ip4<span class="token punctuation">)</span><span class="token punctuation">)</span>
+		<span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
 
-	var_off += hdrlen;
-	ensure_header(skb, var_off, const_off, tcp);
+	var_off <span class="token operator">+=</span> hdrlen<span class="token punctuation">;</span>
+	<span class="token function">ensure_header</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> var_off<span class="token punctuation">,</span> const_off<span class="token punctuation">,</span> tcp<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
-	hdrlen = tcp_hdrlen(tcp);
-	bpf_trace_printk(fmt, 4, hdrlen);
+	hdrlen <span class="token operator">=</span> <span class="token function">tcp_hdrlen</span><span class="token punctuation">(</span>tcp<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">bpf_trace_printk</span><span class="token punctuation">(</span>fmt<span class="token punctuation">,</span> <span class="token number">4</span><span class="token punctuation">,</span> hdrlen<span class="token punctuation">)</span><span class="token punctuation">;</span>
 
-	return TC_ACT_OK;
-}
+	<span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <h2 id="source-code">Source code <a class="header-anchor" href="#source-code">¶</a></h2>
 <ul>
-<li>[demo_common.h](https://github.com/mechpen/mechpen.github.io/blob/src/posts/2019-08-29-bpf-verifier/demo_common.h)</li>
-<li>[demo_bad.c](https://github.com/mechpen/mechpen.github.io/blob/src/posts/2019-08-29-bpf-verifier/demo_bad.c)</li>
-<li>[demo_good.c](https://github.com/mechpen/mechpen.github.io/blob/src/posts/2019-08-29-bpf-verifier/demo_good.c)</li>
+<li><a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_common.h">demo_common.h</a></li>
+<li><a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_bad.c">demo_bad.c</a></li>
+<li><a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_good.c">demo_good.c</a></li>
 </ul>
 
   </div>
 </div>
 <div class="vskip"></div>
-<script src="https://utteranc.es/client.js"
-        repo="mechpen/mechpen.github.io"
-        issue-term="pathname"
-        label="comment"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
+<script src="https://utteranc.es/client.js" repo="mechpen/mechpen.github.io" issue-term="pathname" label="comment" theme="github-light" crossorigin="anonymous" async="">
 </script>
 
 
     </div>
-  </body>
-</html>
+  
+
+</body></html>

@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html>
-  <head>
+<!DOCTYPE html><html><head>
     <meta charset="utf-8">
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,16 +8,26 @@
 <title>TCP sequence number and 3-way handshake – Mechpen</title>
 
 
-<link rel="icon" type="image/png" href="/assets/favicon.png" />
-<link rel="stylesheet" href="/assets/style.css" />
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/style.css">
 
     
     
-    <link href="/assets/prism.css" rel="stylesheet" />
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
     
   </head>
 
-  <body class="line-numbers">
+  <body>
     <div>
       <div class="container">
         <header class="masthead clearfix">
@@ -56,7 +64,7 @@ sockets.</em></p>
 T is 120 seconds according to <a href="https://www.pearson.com/us/higher-education/program/Tanenbaum-Computer-Networks-5th-Edition/PGM270019.html">Tanenbaum</a>. If this rule is violated,
 bad things could happen.  The following figure shows one such
 scenario.</p>
-<p><img src="tcp-stale-seq.png" /></p>
+<img src="/posts/2019-06-26-tcp/tcp-stale-seq.png">
 <p>Packets 1 and 2 are stale packets from a previous connection.  The
 sender re-uses initial sequence number N in packet 3, before the stale
 packets are gone.  The sender completes 3-way handshake and sends data
@@ -84,35 +92,35 @@ SYN packet without setting up a connection.  The 3-way handshake is
 designed to help validate SYN packets.  For example, in the following
 figure, the stale SYN packet 1 could not complete 3-way handshake
 because of the RST packet 3.</p>
-<p><img src="tcp-handshake.png" /></p>
+<img src="/posts/2019-06-26-tcp/tcp-handshake.png">
 <p>Can we attach data in the first SYN or SYN-ACK packets to reduce the
-connection time?  Theoretically yes according to [Tomlinson].  However,
+connection time?  Theoretically yes according to <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-06-26-tcp/Tomlin75.pdf">Tomlinson</a>.  However,
 an application cannot accept outstanding data until completion of the
 handshake.  There are several problems with this, for example, SYN
 flood attack.</p>
 <h2 id="initial-sequence-number-in-linux">Initial Sequence Number in Linux <a class="header-anchor" href="#initial-sequence-number-in-linux">¶</a></h2>
 <p>In Linux the initial sequence number for a TCP connection is computed
 by function <code>secure_tcp_seq()</code>.</p>
-<pre><code class="language-c">u32 secure_tcp_seq(__be32 saddr, __be32 daddr,
-		   __be16 sport, __be16 dport)
-{
-	u32 hash;
+<pre class=" language-c"><code class=" language-c">u32 <span class="token function">secure_tcp_seq</span><span class="token punctuation">(</span>__be32 saddr<span class="token punctuation">,</span> __be32 daddr<span class="token punctuation">,</span>
+		   __be16 sport<span class="token punctuation">,</span> __be16 dport<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+	u32 hash<span class="token punctuation">;</span>
 
-	net_secret_init();
-	hash = siphash_3u32((__force u32)saddr, (__force u32)daddr,
-			    (__force u32)sport &lt;&lt; 16 | (__force u32)dport,
-			    &amp;net_secret);
-	return seq_scale(hash);
-}
+	<span class="token function">net_secret_init</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	hash <span class="token operator">=</span> <span class="token function">siphash_3u32</span><span class="token punctuation">(</span><span class="token punctuation">(</span>__force u32<span class="token punctuation">)</span>saddr<span class="token punctuation">,</span> <span class="token punctuation">(</span>__force u32<span class="token punctuation">)</span>daddr<span class="token punctuation">,</span>
+			    <span class="token punctuation">(</span>__force u32<span class="token punctuation">)</span>sport <span class="token operator">&lt;&lt;</span> <span class="token number">16</span> <span class="token operator">|</span> <span class="token punctuation">(</span>__force u32<span class="token punctuation">)</span>dport<span class="token punctuation">,</span>
+			    <span class="token operator">&amp;</span>net_secret<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">return</span> <span class="token function">seq_scale</span><span class="token punctuation">(</span>hash<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 
-static __always_inline void net_secret_init(void)
-{
-	net_get_random_once(&amp;net_secret, sizeof(net_secret));
-}
+<span class="token keyword">static</span> __always_inline <span class="token keyword">void</span> <span class="token function">net_secret_init</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+	<span class="token function">net_get_random_once</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>net_secret<span class="token punctuation">,</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span>net_secret<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 
-static u32 seq_scale(u32 seq)
-{
-	/*
+<span class="token keyword">static</span> u32 <span class="token function">seq_scale</span><span class="token punctuation">(</span>u32 seq<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+	<span class="token comment">/*
 	 *	As close as possible to RFC 793, which
 	 *	suggests using a 250 kHz clock.
 	 *	Further reading shows this assumes 2 Mb/s networks.
@@ -121,9 +129,9 @@ static u32 seq_scale(u32 seq)
 	 *	we also need to limit the resolution so that the u32 seq
 	 *	overlaps less than one time per MSL (2 minutes).
 	 *	Choosing a clock of 64 ns period is OK. (period of 274 s)
-	 */
-	return seq + (ktime_get_real_ns() &gt;&gt; 6);
-}
+	 */</span>
+	<span class="token keyword">return</span> seq <span class="token operator">+</span> <span class="token punctuation">(</span><span class="token function">ktime_get_real_ns</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&gt;&gt;</span> <span class="token number">6</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
 </code></pre>
 <p>The function <code>secure_tcp_seq()</code> first gets a per-boot random value
 <code>net_secret</code>, computes a hash with this random number, and then adds
@@ -139,21 +147,15 @@ been sent must increase slower than the sequence number increment.
 Otherwise, some bytes could be labeled with sequence numbers that are
 used in future connections.  So for 2 Mbps network speed, the clock
 counter needs to grow faster than 2M/8 = 250 kHz.</p>
-<p>[Tomlinson]: https://github.com/mechpen/mechpen.github.io/blob/src/posts/2019-06-26-tcp/Tomlin75.pdf</p>
 
   </div>
 </div>
 <div class="vskip"></div>
-<script src="https://utteranc.es/client.js"
-        repo="mechpen/mechpen.github.io"
-        issue-term="pathname"
-        label="comment"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
+<script src="https://utteranc.es/client.js" repo="mechpen/mechpen.github.io" issue-term="pathname" label="comment" theme="github-light" crossorigin="anonymous" async="">
 </script>
 
 
     </div>
-  </body>
-</html>
+  
+
+</body></html>

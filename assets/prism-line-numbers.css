@@ -1,0 +1,20 @@
+.line-numbers span.line-numbers-row {
+    display: inline-block;
+    width: 3em;
+    margin-right: 0.6em;
+    padding-right: 0.6em;
+    border-right: 1px solid #999;
+    color: #999;
+    letter-spacing: -1px;
+    text-align: right;
+    counter-increment: linenumber;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.line-numbers span.line-numbers-row:before {
+    content: counter(linenumber);
+}
