@@ -18,20 +18,17 @@ scheduling goal of CFS is to keep the `vruntime` of all running
 entities to be the same.
 
 The `vruntime` is calculated by dividing the physical CPU run time of
-the entity with a weight factor.  A high priority entity has a larger
-weight than a low priority entity, thus the `vruntime` of a high
-priority entity grows slower than that of a low priority entity.
-Therefore, when both are running, the high priority entity is
-allocated more phsical CPU time.
-
-Assume a CPU has $n$ running entities.  Entity $i$ has weight $w_i$
-and CPU time $t_i$, $i=1, 2, ..., n$ then
+the entity with a weight factor.  Assume a CPU has $n$ running
+entities.  Entity $i$ has weight $w_i$ and CPU time $t_i$, $i=1, 2,
+..., n$ then
 
 $$\text{vruntime} = \frac{t_1}{w_1} = \frac{t_2}{w_2} = ... = \frac{t_n}{w_n}$$
 
 For any time period $T$, we have:
 
 $$t_i = \frac{w_i}{\sum w}T$$
+
+Thus the allocated CPU time of an entity is proportional to its weight.
 
 ## 2. Implementation
 
