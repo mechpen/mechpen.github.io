@@ -1,43 +1,41 @@
 ---
 title: Linux CFS and task group
 tags: [linux, scheduler]
-list: false
+list: true
 excerpt: |
 
   I dived into the kernel scheduler code under
-  (<code>kernel/sched/</code>) to understand how CFS works and how the
+  <code>kernel/sched/</code> to understand how CFS works and how the
   task group <code>cpu.shares</code> value is used in CFS.
 
 ---
 
-## 1. CFS
+## 1. CFS concepts
 
-### 1.1. Concepts
-
-In CFS, every running entity (process or group) has a virtual runtime
-(`vruntime`) which accounts for the entity's CPU usage. The scheduling
-goal of CFS is to keep the `vruntime` of all running entities to be
-the same.
+In CFS, every running entity, a process or a task group, has a virtual
+runtime (`vruntime`) which accounts for the entity's CPU usage. The
+scheduling goal of CFS is to keep the `vruntime` of all running
+entities to be the same.
 
 The `vruntime` is calculated by dividing the physical CPU run time of
 the entity with a weight factor.  A high priority entity has a larger
 weight than a low priority entity, thus the `vruntime` of a high
 priority entity grows slower than that of a low priority entity.
-Effectively, when both are running, the high priority entity is
+Therefore, when both are running, the high priority entity is
 allocated more phsical CPU time.
 
 Assume a CPU has $n$ running entities.  Entity $E_i$ has weight $w_i$
 and CPU time $t_i$, $i=1, 2, ..., n$ then
 
-$$vruntime = \frac{t_1}{w_1} = \frac{t_2}{w_2} = ... = \frac{t_n}{w_n}$$
+$$\text{vruntime} = \frac{t_1}{w_1} = \frac{t_2}{w_2} = ... = \frac{t_n}{w_n}$$
 
-Over any time period $T$, we have:
+For any time period $T$, we have:
 
 $$t_i = \frac{w_i}{\sum w}T$$
 
-### 1.2. Implementation notes
+## 2. Implementation
 
-#### 1.2.1. Nice level, priority and weight
+### 2.1. Nice level, priority and weight
 
 User can change the nice level of a process with the `nice()` syscall
 or the `setpriority()` syscall.  nice levels are mapped to priority
@@ -74,13 +72,13 @@ the base for weight calculation:
 The above comments doesn't make perfect sense to me.  But we can do a
 few examples to understand the effect of nice levels.
 
-*Example 1:* One CPU with 2 running processes, `p1` and `p2`.  Both
+**Example 1:** One CPU with 2 running processes, `p1` and `p2`.  Both
 processes have the default weight 1024.  Their CPU run times are
 
 $$t_1 = t_2 = 0.5T$$
 
 When the weight of `p1` changed from 1024 to 820 (from nice 0 to
-nice1), their CPU run times are
+nice 1), their CPU run times become
 
 $$t_1 = \frac{820}{820+1024}T \approx 0.4447T,\quad\quad t_2 =
 \frac{1024}{820+1024}T \approx 0.5553T$$
@@ -88,13 +86,13 @@ $$t_1 = \frac{820}{820+1024}T \approx 0.4447T,\quad\quad t_2 =
 So `p1` gets ~$11%$ less CPU time and `p2` gets ~$11%$ more CPU time.
 The test for this example is [here](priority-tests.html#test-1).
 
-*Example 2:* One CPU with 4 running processes, from `p1` to `p4`.  All
-processes have the default weight.  The CPU run times are
+**Example 2:** One CPU with 4 running processes, from `p1` to `p4`.
+All processes have the default weight.  The CPU run times are
 
 $$t_1 = t_2 = t_3 = t_4 = 0.25T$$
 
 When the weight of `p1` changed from 1024 to 820 (from nice 0 to
-nice1), their CPU run times are
+nice1), their CPU run times become
 
 $$t_1 = \frac{820}{820+3\times1024}T \approx 0.2107T,\quad t_2 = t_3 =
 t_4 = \frac{1024}{820+3\times1024}T \approx 0.2631T$$
@@ -103,7 +101,10 @@ t_4 = \frac{1024}{820+3\times1024}T \approx 0.2631T$$
 CPU time.  The test for this example is
 [here](priority-tests.html#test-2).
 
-#### 1.2.2. Data structures
+### 2.2. Data structures
+
+The following lists the major data structures and the related fields.
+Their connections are shown in the following [figure](#structs).
 
 ```c
 struct rq {
@@ -112,9 +113,10 @@ struct rq {
 }
 ```
 
-`struct rq` is the per-CPU data structure that system run queue
+`struct rq` is the per-CPU data structure that stores system run queue
 information.  Its `cfs` field stores the root level CFS run queue
-information.
+information.  The run queue info for realtime scheduler `rt_rq` and
+deadline scheduler `dl_rq` are not shown here.
 
 ```c
 struct cfs_rq {
@@ -133,11 +135,13 @@ struct cfs_rq {
 ```
 
 `struct cfs_rq` stores information of CFS run queue.  Each CPU has a
-root level `cfs_rq` data.  Also each task group has one `cfs_rq` for
-each CPU.  The run queue is implemented as a red-black tree of `struct
-sched_entity`.  The fields of `struct cfs_rq` are as follows:
+root level `cfs_rq`, embedded in `struct rq`.  Every task group also
+has one `cfs_rq` per CPU.  The "queue" is implemented as a red-black
+tree of `struct sched_entity`.  `struct cfs_rq` has the following
+related fields:
 
-- `load`: the sum of `sched_entity(se)` weights on the run queue.
+- `load`: the sum of `sched_entity` (or `se`) weights on the run
+  queue.
 
 - `nr_running`: the number of `se` on the run queue.
 
@@ -182,8 +186,9 @@ struct task_group {
 ```
 
 `struct sched_entity` stores scheduling information.  Each `struct
-task_struct` contains a `se` field of `struct sched_entity`.  Also
-each `struct task_group` contains one `se` for each CPU.
+task_struct` contains an embedded `struct sched_entity`.  Also each
+`struct task_group` contains pointers to a list of per-CPU `struct
+sched_entity`.
 
 `struct sched_entity` contains the following fields:
 
@@ -197,14 +202,16 @@ each `struct task_group` contains one `se` for each CPU.
 
 - `cfs_rq`: the CFS run queue that manages the `se`.
 
-- `my_q`: for a process `se`, this field is `NULL`; for a task group
+- `my_q`: for a task `se`, this field is `NULL`; for a task group
   `se`, this field is the task group's `cfs_rq` on the same CPU.
 
 `struct task_group` contains the following fields:
 
-- `se`: `se[i]` is the task groups's `sched_entity` data for i-th CPU.
+- `se`: `se[i]` is the task groups's `sched_entity` data for $i$-th
+  CPU.
 
-- `cfs_rq`: `cfs_rq[1]` is the task group's `cfs_rq` data for i-th CPU.
+- `cfs_rq`: `cfs_rq[i]` is the task group's `cfs_rq` data for $i$-th
+  CPU.
 
 - `parent`: the parent task group.
 
@@ -214,16 +221,18 @@ each `struct task_group` contains one `se` for each CPU.
 The following figure shows an simple example of task group tree and
 the corresponding kernel data structures.
 
+<a name="structs"></a>
+
 {% loadPgf structs.tex %}
 
-As shown in the gray sub-figure, The system has a task group `tg1`
-under the root task group.  Process `p1` belongs to `tg1` and process
-`p2` belongs to the root task group.  Both `p1` and `p2` are running
-in the $i$-th CPU.
+As shown in the sub-figure at the bottom right, The system has a task
+group `tg1` under the root task group.  Process `p1` belongs to `tg1`
+and process `p2` belongs to the root task group.  Both `p1` and `p2`
+are running on the $i$-th CPU.
 
 The dashed lines mark the connection formed by red-black trees.
 
-#### 1.2.3. Initializing `vruntime`
+### 2.3. Initializing `vruntime`
 
 When a `se` is added to a `cfs_rq`, the `se->vruntime` is initialized
 using the `cfs_rq->min_vruntime`.  For example, the following is a
@@ -247,11 +256,11 @@ _do_fork()
 
 In function `place_entity()`, `vruntime` of the child process is set
 according to `min_vruntime` of the `cfs_rq`.  In (1), the `vruntime`
-is counted as a delta.  And in (2), when enqueuing the child, the
-`vruntime` is set by adding the delta and the new
+is counted as a delta.  And in (2), when enqueuing `se` of the child
+process, the `vruntime` is set by adding the delta back to the new
 `cfs_rq->min_vruntime`.
 
-#### 1.2.4. Updating `vruntime`
+### 2.4. Updating `vruntime`
 
 Function `update_curr()` is called at many places to update `vruntime`
 of the current entity.  The follwoing shows the related code snippet:
@@ -274,11 +283,13 @@ static void update_curr(struct cfs_rq *cfs_rq)
 
 </div>
 
-The new CPU execution time is calculated as `delta_exec`.  Then
-`delta_exec` is scaled to get the `vruntime` increment.
+In line 7, the new CPU time of the current entity is calculated as
+`delta_exec`.  In line 9, `delta_exec` is scaled and added to
+`vruntime`.  Finally in line 10, the `cfs_rq->min_vruntime` is updated
+accordingly in `update_min_vruntime()`.
 
 Function `calc_delta_fair()` multiplies `delta_exec` by a relative
-scale factor and returns
+weight factor and returns
 
 ```text
                               curr->load.weight
@@ -286,16 +297,13 @@ scale factor and returns
                                  NICE_0_LOAD
 ```
 
-`NICE_0_LOAD` is the default weight (1024) for nice level 0.  So for
-any processe with the default nice level, its `vruntime` equals to its
+`NICE_0_LOAD` is the default weight (1024) for nice level 0.  So for a
+processe with the default nice level, its `vruntime` equals to its
 physical CPU run time.
 
-Finally, `min_vruntime` of the run queue is updated accordingly in
-function `update_min_vruntime()`.
+### 2.5. Scheduling
 
-#### 1.2.5. Scheduling
-
-The following shows the code trace of function `__schedule()`:
+The following shows the related code trace of function `__schedule()`:
 
 ```c
 __schedule()
@@ -318,7 +326,7 @@ pick_next_task_fair(struct rq *rq, struct task_struct *prev)
     do {
         struct sched_entity *curr = cfs_rq->curr;
         se = pick_next_entity(cfs_rq, curr);
-        cfs_rq = group_cfs_rq(se);
+        cfs_rq = se->my_q;
     } while (cfs_rq);
 
     p = task_of(se);
@@ -349,16 +357,52 @@ pick_next_task_fair(struct rq *rq, struct task_struct *prev)
 
 </div>
 
-#### 1.2.6. Autogrouping
+The first loop from line 8 to 12 walks the tree of `cfs_rq` from top
+to bottom to find a leaf `se` with the minimum `vruntime`.  The leaf
+`se` belongs to a task which is retrieved in line 14.  Function
+`pick_next_entity()` may take the leftmost entity from the red-black
+tree.
 
-You may be suprised when setting process priority does not take any
-effect.  This is normally due to the autogroup feature.  When this
-feature is enabled, a new CPU control group is created for each new
-session.  If two processes belong to different groups, their
-priorities are overridden by group weights.
+The second loop from line 18 to 30 walks the tree from bottom to top
+to find the common ancestor control group of the previous task and the
+newly selected task.  The entities on the path from the previous task
+to the common ancestor are marked as noncurrent, by setting their
+corresponding `cfs_rq->curr` to `NULL`.  The entities on path from the
+new task to the common ancestor are marked as current, by setting the
+corresponding `cfs_rq->curr` to these entities.  These are done in
+function `put_prev_entity()` and `set_next_entity()` respectively.
 
-See [`man 7 sched`](http://man7.org/linux/man-pages/man7/sched.7.html)
-for more info about the autogroup feature.  See the following
-[section](#2.-task-groups) for more info about group weights.
+## 3. Task groups
 
-## 2. Task groups
+The weights of processes are defined by their nice values.  On the
+other hand, the weights of task groups are defined in the groups'
+`cpu.shares` files in `/sys/fs/cgroup/cpu/`.  The default value of
+`cpu.shares` is 1024.
+
+The `cpu.shares` is split up by the group's per-CPU entitiess.  Each
+entity gets a portion of `cpu.shares` proportional to the task group's
+running load on the CPU.  So for an entity of a task group on CPU $i$:
+
+$$\text{weight}_i = \frac{\text{load}_i}{\sum \text{load}} \text{shares}$$
+
+Here, the "load" is different to system load average.  It is relative
+to the sum of weights of tasks in a task group.  Some details of the
+load calculation can be found in [this lwn
+article](https://lwn.net/Articles/531853/).
+
+As an example, in the [previous figure](#structs), if the host has 4
+CPUs with the same load as in the figure, i.e. both `p1` and `p2` have
+4 running threads/tasks distributed evenly on the 4 CPUs, then each
+`sched_entity` of `tg1` has a weight of 256, and each `sched_entity`
+of `p2` has a weight of 1024.  So `p2` takes 4 times more CPU time
+than `p1`, even though they have the same nice values.
+
+### 3.1. Autogrouping
+
+Linux has an autogrouping feature that automatically creates task
+groups for sessions.  Some distributions have autogrouping enabled by
+default.  So if you are running two processes in different ssh
+sessions, changing the nice values of the processes does not affect
+the their relative priorities.  See [`man 7
+sched`](http://man7.org/linux/man-pages/man7/sched.7.html) for more
+info about the autogroup feature.

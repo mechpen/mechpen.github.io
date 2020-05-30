@@ -11,8 +11,9 @@ Machine: qemu-kvm
 
 Make sure to disable the autogroup feature, which is enabled by
 default.  The autogroup automatically creates a CPU control group for
-each new session.  The scheduling effect of process priority is
-overridden by the effect of its group weights.
+each new session, and the group weights overrides pricess priorities.
+So with autogrouping enabled, changing process priorities may not have
+any effect.
 
 Run the following command to disable autogroup:
 
@@ -20,7 +21,7 @@ Run the following command to disable autogroup:
 root@emu:~# echo 0 > /proc/sys/kernel/sched_autogroup_enabled
 ```
 
-The test script is at [genload.py](../loadtest/genload.py)
+The test script is at [genload.py]({% srcLink loadtest/genload.py %})
 
 ## Test 1
 
