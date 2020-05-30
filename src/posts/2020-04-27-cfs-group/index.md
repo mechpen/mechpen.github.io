@@ -17,8 +17,8 @@ runtime (`vruntime`) which accounts for the entity's CPU usage. The
 scheduling goal of CFS is to keep the `vruntime` of all running
 entities to be the same.
 
-The `vruntime` is calculated by dividing the physical CPU run time of
-the entity with a weight factor.  Assume a CPU has $n$ running
+The `vruntime` of an entity is calculated by dividing the physical run
+time of the entity with a weight factor.  Assume a CPU has $n$ running
 entities.  Entity $i$ has weight $w_i$ and CPU time $t_i$, $i=1, 2,
 ..., n$ then
 
