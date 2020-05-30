@@ -222,8 +222,8 @@ img {
 .line-numbers span.line-numbers-row {
   display: inline-block;
   width: 1em;
-  margin-right: 0.6em;
-  padding-right: 0.6em;
+  margin: -2px 0.6em -2px 0;
+  padding: 2px 0.6em 2px 0;
   border-right: 1px solid #999;
   color: #999;
   letter-spacing: -1px;
