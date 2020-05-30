@@ -24,7 +24,7 @@ priority entity grows slower than that of a low priority entity.
 Therefore, when both are running, the high priority entity is
 allocated more phsical CPU time.
 
-Assume a CPU has $n$ running entities.  Entity $E_i$ has weight $w_i$
+Assume a CPU has $n$ running entities.  Entity $i$ has weight $w_i$
 and CPU time $t_i$, $i=1, 2, ..., n$ then
 
 $$\text{vruntime} = \frac{t_1}{w_1} = \frac{t_2}{w_2} = ... = \frac{t_n}{w_n}$$
