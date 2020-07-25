@@ -119,7 +119,7 @@ system processes are not controlled by the above rules.  For example,
 a user could ssh to the node and run a process on CPU 1, even the CPU
 is allocated to container "foo".</p>
 <p>The problem can be solved by pre-defining <code>kubepods</code> cgroups to
-allocate exclusive CPUs to pods, then passing the customized
+allocate exclusive CPUs for pods, then passing the customized
 <code>kubepods</code> cgroup to <code>kubelet</code> via the <code>--cgroup-root</code> option.</p>
 <h2 id="5.-extra">5. Extra <a class="header-anchor" href="#5.-extra">¶</a></h2>
 <p>I wrote a tool <a href="https://github.com/mechpen/tgtop"><code>tgtop</code></a> to help

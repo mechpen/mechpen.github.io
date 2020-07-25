@@ -105,7 +105,7 @@ a user could ssh to the node and run a process on CPU 1, even the CPU
 is allocated to container "foo".
 
 The problem can be solved by pre-defining `kubepods` cgroups to
-allocate exclusive CPUs to pods, then passing the customized
+allocate exclusive CPUs for pods, then passing the customized
 `kubepods` cgroup to `kubelet` via the `--cgroup-root` option.
 
 ## 5. Extra
