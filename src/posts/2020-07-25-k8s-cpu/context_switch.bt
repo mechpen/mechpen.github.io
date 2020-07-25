@@ -1,0 +1,5 @@
+tracepoint:sched:sched_switch {
+	if (args->prev_pid == 996 || args->next_pid == 996) {
+		printf("%lld prev %d next %d\n", nsecs, args->prev_pid, args->next_pid);	
+	}
+}

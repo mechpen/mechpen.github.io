@@ -1,0 +1,12 @@
+xargs
+
+1. input is not the last argument
+
+$ echo a | xargs -I '{}' echo '{}' b
+a b
+
+2. multiple arguments
+
+$ echo "a b c d" | xargs -n 2 echo
+a b
+c d

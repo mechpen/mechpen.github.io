@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: foo
+spec:
+  containers:
+  - image: mechpen/toolbox
+    name: bar
+    resources:
+      limits:
+        cpu: "1"
+        memory: "200Mi"
