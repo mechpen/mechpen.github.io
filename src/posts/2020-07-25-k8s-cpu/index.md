@@ -107,3 +107,8 @@ is allocated to container "foo".
 The problem can be solved by pre-defining `kubepods` cgroups to
 allocate exclusive CPUs to pods, then passing the customized
 `kubepods` cgroup to `kubelet` via the `--cgroup-root` option.
+
+## 5. Extra
+
+I wrote a tool [`tgtop`](https://github.com/mechpen/tgtop) to help
+observe the above CPU usage behaviors.
