@@ -1,0 +1,135 @@
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Kubernetes CPU requests explained – Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+    
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <div class="post">
+  <h1>Kubernetes CPU requests explained</h1>
+
+  <div class="date">
+    July 25, 2020
+  </div>
+
+  <div class="entry">
+    <p>
+Requesting CPU resource in a pod spec does not guarantee the
+requested CPU for a container.  The only way to guarantee this is to
+use "static CPU manager policy" and exclusively allocate CPUs to the
+container.
+</p>
+    <h2 id="1.-how-cpu-requests-work">1. How CPU requests work <a class="header-anchor" href="#1.-how-cpu-requests-work">¶</a></h2>
+<p>In kubernetes, a pod container specifies CPU resources as follows:</p>
+<pre class=" language-yaml"><code class=" language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: foo
+spec:
+  containers:
+  - name: foo
+    image: mechpen/toolbox
+    resources:
+      limits:
+        cpu: "1"
+      requests:
+        cpu: "1"
+</code></pre>
+<p>The CPU unit 1 means the 100% time of one CPU, as shown in the <code>top</code>
+command.</p>
+<p>The CPU limit is enforced by CFS scheduler quota, by which processes
+of a container are throttled when the container CPU time reaches the
+limit.</p>
+<p>The CPU request is implemented using <code>cpu</code> control group's
+<code>cpu.shares</code>.  This <a href="/posts/2020-04-27-cfs-group/index.html">post</a> has
+more details on CFS and <code>cpu.shares</code>.</p>
+<p>In kubernetes, one CPU provides 1024 shares.  For example, if a node
+has 8 allocatable CPU, then the total number of CPU shares is
+1024*8=8192 as shown below:</p>
+<pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpu/kubepods/cpu.shares
+8192
+</code></pre>
+<p>The container's <code>cpu.shares</code> is allocated from the total shares
+according to this CPU requests in the pod manifest.  For example, in
+the above example, container "foo" requests 1 CPU and thus has value
+"1024":</p>
+<pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpu/kubepods/&lt;pod_foo&gt;/&lt;container_foo&gt;/cpu.shares
+1024
+</code></pre>
+<h2 id="2.-why-cpu-request-does-not-work">2. Why CPU request does not work <a class="header-anchor" href="#2.-why-cpu-request-does-not-work">¶</a></h2>
+<p>The above implementation may seem good enough to ensure CPU times for
+containers: according to the <a href="https://mechpen.github.io/posts/2020-04-27-cfs-group/index.html#1.-cfs-concepts">CFS
+equation</a>,
+each container's CPU time is proportional to its scheduling weight.
+Container "foo" gets 1/8 of the total 8 CPU share, thus gets 1 CPU out
+of the total 8 CPUs.</p>
+<p>However, in SMP systems, <code>cpu.shares</code> does not equal to CFS weight as
+explained in <a href="https://mechpen.github.io/posts/2020-04-27-cfs-group/index.html#3.-task-groups">this
+post</a>.
+For example, 2 containers, both requesting 1 CPU, could be scheduled
+on the same CPU.  Each container only gets 50% CPU at most.</p>
+<h2 id="3.-how-static-cpu-manager-policy-work">3. How static CPU manager policy work <a class="header-anchor" href="#3.-how-static-cpu-manager-policy-work">¶</a></h2>
+<p>Kubernetes provides a <a href="https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/#static-policy">static CPU manager
+policy</a>
+that can "exclusively" allocate CPUs to a container by using the
+<code>cpuset</code> cgroup.</p>
+<p>For example, if CPU 1 is assigned to container "foo".  Then we have:</p>
+<pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpuset/kubepods/&lt;pod_foo&gt;/&lt;container_foo&gt;/cpuset.cpus
+1
+</code></pre>
+<p>For any other pod container, we have:</p>
+<pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpuset/kubepods/&lt;pod_bar&gt;/&lt;container_bar&gt;/cpuset.cpus
+0,2-7
+</code></pre>
+<p>Thus processes in the other containers are not scheduled to CPU 1.</p>
+<h2 id="4.-customize-kubepods-cgroup">4. Customize <code>kubepods</code> cgroup <a class="header-anchor" href="#4.-customize-kubepods-cgroup">¶</a></h2>
+<p>The above discussions are within the <code>kubepods</code> cgroups.  The other
+system processes are not controlled by the above rules.  For example,
+a user could ssh to the node and run a process on CPU 1, even the CPU
+is allocated to container "foo".</p>
+<p>The problem can be solved by pre-defining <code>kubepods</code> cgroups to
+allocate exclusive CPUs to pods, then passing the customized
+<code>kubepods</code> cgroup to <code>kubelet</code> via the <code>--cgroup-root</code> option.</p>
+
+  </div>
+</div>
+<div class="vskip"></div>
+<script src="https://utteranc.es/client.js" repo="mechpen/mechpen.github.io" issue-term="pathname" label="comment" theme="github-light" crossorigin="anonymous" async="">
+</script>
+
+
+    </div>
+  
+
+</body></html>
