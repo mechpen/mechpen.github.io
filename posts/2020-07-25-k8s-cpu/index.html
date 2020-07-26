@@ -82,8 +82,8 @@ has 8 allocatable CPU, then the total number of CPU shares is
 </code></pre>
 <p>The container's <code>cpu.shares</code> is allocated from the total shares
 according to this CPU requests in the pod manifest.  For example, in
-the above example, container "foo" requests 1 CPU and thus has value
-"1024":</p>
+the above example, container "foo" requests 1 CPU and thus has shares
+value "1024":</p>
 <pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpu/kubepods/&lt;pod_foo&gt;/&lt;container_foo&gt;/cpu.shares
 1024
 </code></pre>
@@ -112,15 +112,17 @@ that can "exclusively" allocate CPUs to a container by using the
 <pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpuset/kubepods/&lt;pod_bar&gt;/&lt;container_bar&gt;/cpuset.cpus
 0,2-7
 </code></pre>
-<p>Thus processes in the other containers are not scheduled to CPU 1.</p>
+<p>Thus processes in the other containers are not scheduled on CPU 1.</p>
 <h2 id="4.-customize-kubepods-cgroup">4. Customize <code>kubepods</code> cgroup <a class="header-anchor" href="#4.-customize-kubepods-cgroup">¶</a></h2>
-<p>The above discussions are within the <code>kubepods</code> cgroups.  The other
-system processes are not controlled by the above rules.  For example,
-a user could ssh to the node and run a process on CPU 1, even the CPU
-is allocated to container "foo".</p>
+<p>The above discussions are within the <code>kubepods</code> cgroups.  The system
+processes are not under the <code>kubepods</code> cgroup and thus not controlled
+by the above rules.  For example, a user could ssh to the node and run
+a process on CPU 1, even the CPU is "exclusively" allocated to
+container "foo" in kubernetes.</p>
 <p>The problem can be solved by pre-defining <code>kubepods</code> cgroups to
-allocate exclusive CPUs for pods, then passing the customized
-<code>kubepods</code> cgroup to <code>kubelet</code> via the <code>--cgroup-root</code> option.</p>
+allocate exclusive CPUs for kubernetes pods, then passing the
+customized <code>kubepods</code> cgroup to <code>kubelet</code> via the <code>--cgroup-root</code>
+option. (I didn't try this out.)</p>
 <h2 id="5.-extra">5. Extra <a class="header-anchor" href="#5.-extra">¶</a></h2>
 <p>I wrote a tool <a href="https://github.com/mechpen/tgtop"><code>tgtop</code></a> to help
 observe the above CPU usage behaviors.</p>
