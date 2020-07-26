@@ -52,8 +52,8 @@ has 8 allocatable CPU, then the total number of CPU shares is
 
 The container's `cpu.shares` is allocated from the total shares
 according to this CPU requests in the pod manifest.  For example, in
-the above example, container "foo" requests 1 CPU and thus has value
-"1024":
+the above example, container "foo" requests 1 CPU and has shares
+value "1024":
 
 ```text
 # cat /sys/fs/cgroup/cpu/kubepods/<pod_foo>/<container_foo>/cpu.shares
@@ -65,8 +65,8 @@ The above implementation may seem good enough to ensure CPU times for
 containers: according to the [CFS
 equation](https://mechpen.github.io/posts/2020-04-27-cfs-group/index.html#1.-cfs-concepts),
 each container's CPU time is proportional to its scheduling weight.
-Container "foo" gets 1/8 of the total 8 CPU share, thus gets 1 CPU out
-of the total 8 CPUs.
+Container "foo" gets 1/8 of the total 8 CPU share, so it gets 1 CPU
+out of the total 8 CPUs.
 
 However, in SMP systems, `cpu.shares` does not equal to CFS weight as
 explained in [this
@@ -95,18 +95,20 @@ For any other pod container, we have:
 0,2-7
 ```
 
-Thus processes in the other containers are not scheduled to CPU 1.
+Thus processes in the other containers are not scheduled on CPU 1.
 
 ## 4. Customize `kubepods` cgroup
 
-The above discussions are within the `kubepods` cgroups.  The other
-system processes are not controlled by the above rules.  For example,
-a user could ssh to the node and run a process on CPU 1, even the CPU
-is allocated to container "foo".
+The above discussions are within the `kubepods` cgroups.  The system
+processes are not under the `kubepods` cgroup and not controlled by
+the above rules.  For example, a user could ssh to the node and run a
+process on CPU 1, even the CPU is "exclusively" allocated to container
+"foo" in kubernetes.
 
 The problem can be solved by pre-defining `kubepods` cgroups to
-allocate exclusive CPUs for pods, then passing the customized
-`kubepods` cgroup to `kubelet` via the `--cgroup-root` option.
+allocate exclusive CPUs for kubernetes pods, then passing the
+customized `kubepods` cgroup to `kubelet` via the `--cgroup-root`
+option. (I didn't try this out.)
 
 ## 5. Extra
 
