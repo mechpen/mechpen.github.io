@@ -82,7 +82,7 @@ has 8 allocatable CPU, then the total number of CPU shares is
 </code></pre>
 <p>The container's <code>cpu.shares</code> is allocated from the total shares
 according to this CPU requests in the pod manifest.  For example, in
-the above example, container "foo" requests 1 CPU and thus has shares
+the above example, container "foo" requests 1 CPU and has shares
 value "1024":</p>
 <pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpu/kubepods/&lt;pod_foo&gt;/&lt;container_foo&gt;/cpu.shares
 1024
@@ -92,8 +92,8 @@ value "1024":</p>
 containers: according to the <a href="https://mechpen.github.io/posts/2020-04-27-cfs-group/index.html#1.-cfs-concepts">CFS
 equation</a>,
 each container's CPU time is proportional to its scheduling weight.
-Container "foo" gets 1/8 of the total 8 CPU share, thus gets 1 CPU out
-of the total 8 CPUs.</p>
+Container "foo" gets 1/8 of the total 8 CPU share, so it gets 1 CPU
+out of the total 8 CPUs.</p>
 <p>However, in SMP systems, <code>cpu.shares</code> does not equal to CFS weight as
 explained in <a href="https://mechpen.github.io/posts/2020-04-27-cfs-group/index.html#3.-task-groups">this
 post</a>.
@@ -115,10 +115,10 @@ that can "exclusively" allocate CPUs to a container by using the
 <p>Thus processes in the other containers are not scheduled on CPU 1.</p>
 <h2 id="4.-customize-kubepods-cgroup">4. Customize <code>kubepods</code> cgroup <a class="header-anchor" href="#4.-customize-kubepods-cgroup">¶</a></h2>
 <p>The above discussions are within the <code>kubepods</code> cgroups.  The system
-processes are not under the <code>kubepods</code> cgroup and thus not controlled
-by the above rules.  For example, a user could ssh to the node and run
-a process on CPU 1, even the CPU is "exclusively" allocated to
-container "foo" in kubernetes.</p>
+processes are not under the <code>kubepods</code> cgroup and not controlled by
+the above rules.  For example, a user could ssh to the node and run a
+process on CPU 1, even the CPU is "exclusively" allocated to container
+"foo" in kubernetes.</p>
 <p>The problem can be solved by pre-defining <code>kubepods</code> cgroups to
 allocate exclusive CPUs for kubernetes pods, then passing the
 customized <code>kubepods</code> cgroup to <code>kubelet</code> via the <code>--cgroup-root</code>
