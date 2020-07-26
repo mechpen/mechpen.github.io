@@ -62,7 +62,7 @@ value "1024":
 ## 2. Why CPU request does not work
 
 The above implementation may seem good enough to ensure CPU times for
-containers: according to the [CFS
+containers: according to this [CFS
 equation](https://mechpen.github.io/posts/2020-04-27-cfs-group/index.html#1.-cfs-concepts),
 each container's CPU time is proportional to its scheduling weight.
 Container "foo" gets 1/8 of the total 8 CPU share, so it gets 1 CPU
