@@ -81,9 +81,8 @@ has 8 allocatable CPU, then the total number of CPU shares is
 8192
 </code></pre>
 <p>The container's <code>cpu.shares</code> is allocated from the total shares
-according to this CPU requests in the pod manifest.  For example, in
-the above example, container "foo" requests 1 CPU and has shares
-value "1024":</p>
+according to this CPU requests in the pod manifest.  In the above
+example, container "foo" requests 1 CPU and has shares value "1024":</p>
 <pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpu/kubepods/&lt;pod_foo&gt;/&lt;container_foo&gt;/cpu.shares
 1024
 </code></pre>
