@@ -120,7 +120,7 @@ the above rules.  For example, a user could ssh to the node and run a
 process on CPU 1, even the CPU is "exclusively" allocated to container
 "foo" in kubernetes.</p>
 <p>The problem can be solved by pre-defining <code>kubepods</code> cgroups to
-allocate exclusive CPUs for kubernetes pods, then passing the
+allocate dedicated CPUs for kubernetes pods, then passing the
 customized <code>kubepods</code> cgroup to <code>kubelet</code> via the <code>--cgroup-root</code>
 option. (I didn't try this out.)</p>
 <h2 id="5.-extra">5. Extra <a class="header-anchor" href="#5.-extra">¶</a></h2>

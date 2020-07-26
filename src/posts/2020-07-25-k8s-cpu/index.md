@@ -106,7 +106,7 @@ process on CPU 1, even the CPU is "exclusively" allocated to container
 "foo" in kubernetes.
 
 The problem can be solved by pre-defining `kubepods` cgroups to
-allocate exclusive CPUs for kubernetes pods, then passing the
+allocate dedicated CPUs for kubernetes pods, then passing the
 customized `kubepods` cgroup to `kubelet` via the `--cgroup-root`
 option. (I didn't try this out.)
 
