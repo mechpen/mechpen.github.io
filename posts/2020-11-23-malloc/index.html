@@ -1,0 +1,273 @@
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Malloc in glibc – Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+    
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <div class="post">
+  <h1>Malloc in glibc</h1>
+
+  <div class="date">
+    November 23, 2020
+  </div>
+
+  <div class="entry">
+    <p>
+I went through glibc malloc code when troubleshooting a segfault.
+Here are some notes on the malloc code.
+</p>
+    <h2 id="1.-chunk">1. chunk <a class="header-anchor" href="#1.-chunk">¶</a></h2>
+<p><code>malloc()</code> uses <code>sbrk()</code> or <code>mmap()</code> to request memory pages from OS,
+then uses chunks to organize blocks of memories.  The chunks have the
+following data structure:</p>
+<pre class=" language-c"><code class=" language-c"><span class="token keyword">struct</span> <span class="token class-name">malloc_chunk</span> <span class="token punctuation">{</span>
+  size_t      mchunk_prev_size<span class="token punctuation">;</span>  <span class="token comment">/* Size of previous chunk (if free).  */</span>
+  size_t      mchunk_size<span class="token punctuation">;</span>       <span class="token comment">/* Size in bytes, including overhead. */</span>
+
+  <span class="token keyword">struct</span> <span class="token class-name">malloc_chunk</span><span class="token operator">*</span> fd<span class="token punctuation">;</span>         <span class="token comment">/* double links -- used only if free. */</span>
+  <span class="token keyword">struct</span> <span class="token class-name">malloc_chunk</span><span class="token operator">*</span> bk<span class="token punctuation">;</span>
+
+  <span class="token comment">/* Only used for large blocks: pointer to next larger size.  */</span>
+  <span class="token keyword">struct</span> <span class="token class-name">malloc_chunk</span><span class="token operator">*</span> fd_nextsize<span class="token punctuation">;</span> <span class="token comment">/* double links -- used only if free. */</span>
+  <span class="token keyword">struct</span> <span class="token class-name">malloc_chunk</span><span class="token operator">*</span> bk_nextsize<span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+</code></pre>
+<p>The fields <code>mchunk_prev_size</code> and <code>mchunk_size</code> are used to connect
+chunks in memory pages.  For example, the following helper macros are
+defined:</p>
+<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">define</span> SIZE_BITS (PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)</span>
+
+<span class="token macro property">#<span class="token directive keyword">define</span> next_chunk(p) ((mchunkptr)(((char *)(p)) + (p)-&gt;mchunk_size &amp; ~(SIZE_BITS)))</span>
+<span class="token macro property">#<span class="token directive keyword">define</span> prev_chunk(p) ((mchunkptr)(((char *)(p)) - (p)-&gt;mchunk_prev_size))</span>
+</code></pre>
+<p>When <code>malloc()</code> finds a free chunk, it sets the <code>PREV_INUSE</code> flag in
+the <code>mchunk_size</code> field of the next chunk, then returns the memory
+address at field <code>fd</code>.  The fields <code>fd</code>, <code>bk</code>, <code>fd_nextsize</code> and
+<code>bk_nextsize</code> are shared with user data.  The following macros map
+between <code>malloc()</code> returned memory address and its corresponding chunk
+address:</p>
+<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">define</span> chunk2mem(p)   ((void*)((char*)(p) + 2*SIZE_SZ))</span>
+<span class="token macro property">#<span class="token directive keyword">define</span> mem2chunk(mem) ((mchunkptr)((char*)(mem) - 2*SIZE_SZ))</span>
+</code></pre>
+<p>Free chunks are put into "bins" according to the chunk sizes.  Bins
+are double linked lists which are connected via the <code>fd</code>, <code>bk</code>,
+<code>fd_nextsize</code> and <code>bk_nextsize</code> fields.</p>
+<h2 id="2.-bins">2. bins <a class="header-anchor" href="#2.-bins">¶</a></h2>
+<p>The bins array is defined in <code>struct malloc_state</code>:</p>
+<pre class=" language-c"><code class=" language-c"><span class="token keyword">struct</span> <span class="token class-name">malloc_state</span> <span class="token punctuation">{</span>
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+
+  <span class="token comment">/* Fastbins */</span>
+  mfastbinptr fastbinsY<span class="token punctuation">[</span>NFASTBINS<span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+  <span class="token comment">/* Base of the topmost chunk -- not otherwise kept in a bin */</span>
+  mchunkptr top<span class="token punctuation">;</span>
+
+  <span class="token comment">/* Normal bins packed as described above */</span>
+  mchunkptr bins<span class="token punctuation">[</span>NBINS <span class="token operator">*</span> <span class="token number">2</span> <span class="token operator">-</span> <span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+  <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+</code></pre>
+<p>The <code>bins</code> field stores the double link list headers for the bins.
+Each header contains a forward pointer and a backward pointer.</p>
+<p>Certain constants are used to compute bin indexes.  The following
+table shows some of these constants on x86_64 systems:</p>
+<table>
+<thead>
+<tr>
+<th>const</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SIZE_SZ</td>
+<td>8</td>
+</tr>
+<tr>
+<td>MALLOC_ALIGNMENT</td>
+<td>16</td>
+</tr>
+<tr>
+<td>MIN_CHUNK_SIZE</td>
+<td>32</td>
+</tr>
+<tr>
+<td>MINSIZE</td>
+<td>32</td>
+</tr>
+<tr>
+<td>NBINS</td>
+<td>128</td>
+</tr>
+<tr>
+<td>NSMALLBINS</td>
+<td>64</td>
+</tr>
+<tr>
+<td>SMALLBIN_WIDTH</td>
+<td>16</td>
+</tr>
+<tr>
+<td>MIN_LARGE_SIZE</td>
+<td>1024</td>
+</tr>
+</tbody>
+</table>
+<p>The following table shows the mapping from chunk size to bin indexes
+(the results are from the macro <code>largebin_index_64()</code>):</p>
+<table>
+<thead>
+<tr>
+<th>size</th>
+<th>index</th>
+<th>index range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unsorted</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2<em>16 - 63</em>16</td>
+<td>sz &gt;&gt; 4</td>
+<td>2 - 63</td>
+</tr>
+<tr>
+<td>1024 - ((49&lt;&lt;6)-1)</td>
+<td>48 + (sz &gt;&gt; 6)</td>
+<td>64 - 96</td>
+</tr>
+<tr>
+<td>49&lt;&lt;6 - ((21&lt;&lt;9)-1)</td>
+<td>91 + (sz &gt;&gt; 9)</td>
+<td>97 - 111</td>
+</tr>
+<tr>
+<td>21&lt;&lt;9 - ((11&lt;&lt;12)-1)</td>
+<td>110 + (sz &gt;&gt; 12)</td>
+<td>112 - 120</td>
+</tr>
+<tr>
+<td>11&lt;&lt;12 - ((5&lt;&lt;15)-1)</td>
+<td>119 + (sz &gt;&gt; 15)</td>
+<td>120 - 123</td>
+</tr>
+<tr>
+<td>5&lt;&lt;15 - ((3&lt;&lt;18)-1)</td>
+<td>124 + (sz &gt;&gt; 18)</td>
+<td>124 - 126</td>
+</tr>
+<tr>
+<td>others</td>
+<td>126</td>
+<td>126</td>
+</tr>
+</tbody>
+</table>
+<p>Index 1 is for "unsorted" bins.  The other bins are "sorted" bins.
+Chunks in unsorted bins have different sizes.  The <code>free()</code> function
+puts chunks in the unsorted bin.  The <code>malloc()</code> function takes chunks
+from the unsorted bin and inserts them into the sorted bin according
+to their sizes.</p>
+<p>Index 2 to 63 are for small bins.  Chunks in each small bin have the
+same size (index*16).  The <code>fd_nextsize</code> and <code>bk_nextsize</code> fields in
+<code>struct malloc_chunk</code> are not used.</p>
+<p>// FIXME
+Index 64 to 126 are for large bins.  Each large bin has chunks of
+various sizes.  Chunks of the same size are linked in a list by the
+<code>fd</code> and <code>bk</code> fields.  The lists are sorted by their chunk sizes and
+linked by the <code>fd_nextsize</code> and <code>bk_nextsize</code> fields.  This data
+structure design is for quickly finding a chunk with the request size.</p>
+<h2 id="3.-malloc">3. malloc <a class="header-anchor" href="#3.-malloc">¶</a></h2>
+<p>The <code>malloc()</code> function searches the free bins (small bins, unsorted
+bins, and large bins) for a chunk with the requested size.  If no
+chunk has the requested size, <code>malloc()</code> splits a larger chunk, and
+inserts the remainder chunk in the unsorted bin.</p>
+<p>When searching the unsorted chunks, <code>malloc()</code> also moves chunks from
+the unsorted bin to the sorted bins.</p>
+<h2 id="4.-free">4. free <a class="header-anchor" href="#4.-free">¶</a></h2>
+<p>The <code>free()</code> function tries to merge the chunk with adjacent chunks,
+then inserts the result chunk to the unsorted bin.</p>
+<h2 id="5.-errors">5. errors <a class="header-anchor" href="#5.-errors">¶</a></h2>
+<p>The <code>malloc()</code> and <code>free()</code> functions have a few checks for integrity
+of the chunk info.  For example, double free could cause an assertion
+failure that outputs error messages like "double free or corruption
+(!prev)".  However, since the fields like<code>fd</code>, <code>bk</code>, and etc are
+returned to caller.  If some data is modified after it is freed, the
+process could segfault.  The following <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2020-11-23-malloc/segfault.c">code</a>
+shows such an example:</p>
+<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;malloc.h&gt;</span></span>
+
+<span class="token macro property">#<span class="token directive keyword">define</span> S_TCACHE 10</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+	<span class="token keyword">long</span> <span class="token operator">*</span>p<span class="token punctuation">[</span>S_TCACHE<span class="token punctuation">]</span><span class="token punctuation">;</span>
+	<span class="token keyword">int</span> i<span class="token punctuation">;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">mallopt</span><span class="token punctuation">(</span>M_MXFAST<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">1</span><span class="token punctuation">)</span>
+		<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"mallopt error\n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> S_TCACHE<span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+		p<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token function">malloc</span><span class="token punctuation">(</span><span class="token number">8</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+
+	<span class="token keyword">for</span> <span class="token punctuation">(</span>i <span class="token operator">=</span> S_TCACHE <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span> i <span class="token operator">&gt;=</span> <span class="token number">0</span><span class="token punctuation">;</span> i<span class="token operator">--</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+		<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"freeing p[%d]\n"</span><span class="token punctuation">,</span> i<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token function">free</span><span class="token punctuation">(</span>p<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token operator">*</span>p<span class="token punctuation">[</span>i<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+
+	<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+
+  </div>
+</div>
+<div class="vskip"></div>
+<script src="https://utteranc.es/client.js" repo="mechpen/mechpen.github.io" issue-term="pathname" label="comment" theme="github-light" crossorigin="anonymous" async="">
+</script>
+
+
+    </div>
+  
+
+</body></html>
