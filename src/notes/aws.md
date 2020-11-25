@@ -24,3 +24,9 @@ who am i:
 ```text
 aws sts get-caller-identity
 ```
+
+get instance role and credentials
+
+```text
+curl http://169.254.169.254/latest/meta-data/iam/security-credentials
+```

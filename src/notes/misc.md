@@ -17,3 +17,9 @@ does not exist is not error, and vice vesa
 - calico controller
 
 - cloud custodian
+
+Tmux: save pane to file
+
+  $ tmux capture-pane -b temp-capture-buffer -S -
+  $ tmux save-buffer -b temp-capture-buffer ~/tmux.log
+  $ tmux delete-buffer -b capture-buffer

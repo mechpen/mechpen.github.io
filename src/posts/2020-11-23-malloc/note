@@ -1,0 +1,51 @@
+
+size_t/ptr            4/4            4/8              8/8
+---------------------------------------------------------
+overhead              4              4                8
+trailing_size         4		     4		      8
+free_list_pointers    8		     16		      16
+total		      16	     24		      32
+
+bin index
+
+SIZE_SZ = 8
+MALLOC_ALIGNMENT = 16
+
+size                   index                 index range
+--------------------------------------------------------
+unordered              1                     1
+--------------------------------------------------------
+32 - 1023              sz >> 4               2 - 63
+--------------------------------------------------------
+1024 - ((49<<6)-1)     48 + (sz >> 6)        64 - 96
+49<<6 - ((21<<9)-1)    91 + (sz >> 9)        97 - 111
+21<<9 - ((11<<12)-1)   110 + (sz >> 12)      112 - 120
+11<<12 - ((5<<15)-1)   119 + (sz >> 15)      120 - 123
+5<<15 - ((3<<18)-1)    124 + (sz >> 18)      124 - 126
+~                      126                   126
+
+#define MIN_CHUNK_SIZE        (offsetof(struct malloc_chunk, fd_nextsize))
+
+MIN_CHUNK_SIZE = 32
+
+#define MINSIZE  \
+  (unsigned long)(((MIN_CHUNK_SIZE+MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK))
+
+MINSIZE = 32
+
+#define request2size(req)                                         \
+  (((req) + SIZE_SZ + MALLOC_ALIGN_MASK < MINSIZE)  ?             \
+   MINSIZE :                                                      \
+   ((req) + SIZE_SZ + MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK)
+
+32 = request2size(0)
+
+#define NBINS             128
+#define NSMALLBINS         64
+#define SMALLBIN_WIDTH    MALLOC_ALIGNMENT
+#define SMALLBIN_CORRECTION (MALLOC_ALIGNMENT > 2 * SIZE_SZ)
+#define MIN_LARGE_SIZE    ((NSMALLBINS - SMALLBIN_CORRECTION) * SMALLBIN_WIDTH)
+
+MIN_LARGE_SIZE = 1024
+
+Q: how to make sure next chunk is valid? nextchunk = chunk_at_offset(p, size);
