@@ -174,12 +174,12 @@ to their sizes.</p>
 same size (index*16).  The chunks in a bin are linked by their <code>fd</code>
 and <code>bk</code> fields into a double-linked list.  The <code>fd_nextsize</code> and
 <code>bk_nextsize</code> fields are not used.</p>
-<p>Index 64 to 126 are for large bins.  Each large bin has chunks of
-different sizes.  Chunks of the same size are linked in a list by the
-<code>fd</code> and <code>bk</code> fields.  These chunk lists are sorted by chunk sizes and
-linked by the <code>fd_nextsize</code> and <code>bk_nextsize</code> fields.  This data
-structure design is for quickly finding a chunk with the requested
-size.</p>
+<p>Index 64 to 126 are for large bins.  Each large bin is a list of
+lists.  Because each bin has chunks of different sizes, chunks of the
+same size are linked in a list by the <code>fd</code> and <code>bk</code> fields.  These
+chunk lists are sorted by chunk sizes and linked by the <code>fd_nextsize</code>
+and <code>bk_nextsize</code> fields.  This data structure design is for quickly
+finding a chunk with the requested size.</p>
 <h2 id="3.-malloc">3. malloc <a class="header-anchor" href="#3.-malloc">¶</a></h2>
 <p>The <code>malloc()</code> function searches the free bins (small bins, unsorted
 bins, and large bins) for a chunk with the requested size.  If no
