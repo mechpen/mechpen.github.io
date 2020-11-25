@@ -116,12 +116,12 @@ same size (index*16).  The chunks in a bin are linked by their `fd`
 and `bk` fields into a double-linked list.  The `fd_nextsize` and
 `bk_nextsize` fields are not used.
 
-Index 64 to 126 are for large bins.  Each large bin has chunks of
-different sizes.  Chunks of the same size are linked in a list by the
-`fd` and `bk` fields.  These chunk lists are sorted by chunk sizes and
-linked by the `fd_nextsize` and `bk_nextsize` fields.  This data
-structure design is for quickly finding a chunk with the requested
-size.
+Index 64 to 126 are for large bins.  Each large bin is a list of
+lists.  Because each bin has chunks of different sizes, chunks of the
+same size are linked in a list by the `fd` and `bk` fields.  These
+chunk lists are sorted by chunk sizes and linked by the `fd_nextsize`
+and `bk_nextsize` fields.  This data structure design is for quickly
+finding a chunk with the requested size.
 
 ## 3. malloc
 
