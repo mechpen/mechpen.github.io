@@ -89,7 +89,7 @@ server process is down.</p>
 or <code>send()/recv()</code> return different error values when the connection
 receives <code>RST</code> messages, as shown in the following <a href="https://github.com/torvalds/linux/blob/e292f05e0df73f9fcc93329663936e1ded97a988/net/ipv4/tcp_input.c#L4109-L4120">kernel code
 snippet</a>:</p>
-<pre class=" language-c"><code class=" language-c">	<span class="token keyword">switch</span> <span class="token punctuation">(</span>sk<span class="token operator">-&gt;</span>sk_state<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+<pre class=" language-c" tabindex="0"><code class=" language-c">	<span class="token keyword">switch</span> <span class="token punctuation">(</span>sk<span class="token operator">-&gt;</span>sk_state<span class="token punctuation">)</span> <span class="token punctuation">{</span>
 	<span class="token keyword">case</span> TCP_SYN_SENT<span class="token operator">:</span>
 		sk<span class="token operator">-&gt;</span>sk_err <span class="token operator">=</span> ECONNREFUSED<span class="token punctuation">;</span>
 		<span class="token keyword">break</span><span class="token punctuation">;</span>
@@ -191,7 +191,7 @@ administrative filtering".</p>
 <p>These ICMP messages could also be generated with <code>ip route</code> command or
 <code>iptables</code> command.  For example both the following commands could
 generate <code>PKT_FILTERED</code> messages for a destination.</p>
-<pre class=" language-text"><code class=" language-text"># ip route add prohibit &lt;dest&gt;
+<pre class=" language-text" tabindex="0"><code class=" language-text"># ip route add prohibit &lt;dest&gt;
 # iptables -I FORWARD -d &lt;dest&gt; -j REJECT --reject-with icmp-admin-prohibited
 </code></pre>
 <p>For UDP, unconnected sockets ignore all ICMP errors.  Connected
@@ -298,7 +298,7 @@ messages are dropped in the network.</p>
 <p>The remote peer could also drop <code>SYN</code> packets if the socket backlog
 queue is full.  The number of dropped <code>SYN</code> packets can be shown with
 the following command:</p>
-<pre class=" language-text"><code class=" language-text">$ netstat -s | grep -i listen
+<pre class=" language-text" tabindex="0"><code class=" language-text">$ netstat -s | grep -i listen
     21 times the listen queue of a socket overflowed
     21 SYNs to LISTEN sockets dropped
 </code></pre>
@@ -377,7 +377,7 @@ values for these timeout errors:</p>
 </table>
 <p>All these timeout errors are counted in the SNMP mib
 <code>TCPABORTONTIMEOUT</code> and can be shown with the following command:</p>
-<pre class=" language-text"><code class=" language-text">$ netstat -s | grep timeout
+<pre class=" language-text" tabindex="0"><code class=" language-text">$ netstat -s | grep timeout
     3 connections aborted due to timeout
 </code></pre>
 <h2 id="4.-summary">4. Summary <a class="header-anchor" href="#4.-summary">¶</a></h2>

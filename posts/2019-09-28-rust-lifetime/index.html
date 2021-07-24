@@ -135,13 +135,13 @@ code segments that are mapped to the process memory.</p>
 <p>The first simple example is from the
 <a href="https://doc.rust-lang.org/stable/book/ch10-03-lifetime-syntax.html#preventing-dangling-references-with-lifetimes">rust book</a>.</p>
 <div class="badcode"></div>
-<pre class=" language-rust"><code class=" language-rust"><span class="token punctuation">{</span>
+<pre class=" language-rust" tabindex="0"><code class=" language-rust"><span class="token punctuation">{</span>
     <span class="token keyword">let</span> r<span class="token punctuation">;</span>
     <span class="token punctuation">{</span>
         <span class="token keyword">let</span> x <span class="token operator">=</span> <span class="token number">5</span><span class="token punctuation">;</span>
         r <span class="token operator">=</span> <span class="token operator">&amp;</span>x<span class="token punctuation">;</span>
     <span class="token punctuation">}</span>
-    <span class="token function">println!</span><span class="token punctuation">(</span><span class="token string">"r: {}"</span><span class="token punctuation">,</span> r<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token macro property">println!</span><span class="token punctuation">(</span><span class="token string">"r: {}"</span><span class="token punctuation">,</span> r<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 </code></pre>
 <p>The compiler tries to associate a lifetime <code>'a</code> with reference <code>r</code>
@@ -155,7 +155,7 @@ scope(\text{r})</annotation></semantics></math></span><span class="katex-html" a
 <h3 id="example-2">Example 2 <a class="header-anchor" href="#example-2">¶</a></h3>
 <p>The second example is a modified version of an example in the
 <a href="https://doc.rust-lang.org/stable/book/ch10-03-lifetime-syntax.html#lifetime-annotations-in-function-signatures">rust book</a>.</p>
-<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">fn</span> longest<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> str<span class="token punctuation">,</span> y<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> str<span class="token punctuation">)</span> <span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> str <span class="token punctuation">{</span>
+<pre class=" language-rust" tabindex="0"><code class=" language-rust"><span class="token keyword">fn</span> <span class="token function-definition function">longest</span><span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> <span class="token keyword">str</span><span class="token punctuation">,</span> y<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> <span class="token keyword">str</span><span class="token punctuation">)</span> <span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> <span class="token keyword">str</span> <span class="token punctuation">{</span>
     <span class="token keyword">if</span> x<span class="token punctuation">.</span><span class="token function">len</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&gt;</span> y<span class="token punctuation">.</span><span class="token function">len</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
         x
     <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
@@ -163,16 +163,16 @@ scope(\text{r})</annotation></semantics></math></span><span class="katex-html" a
     <span class="token punctuation">}</span>
 <span class="token punctuation">}</span>
 
-<span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token keyword">let</span> s1 <span class="token operator">=</span> String<span class="token punctuation">::</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">"long string is long"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token keyword">let</span> s2 <span class="token operator">=</span> String<span class="token punctuation">::</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">"xyz"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">fn</span> <span class="token function-definition function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> s1 <span class="token operator">=</span> <span class="token class-name">String</span><span class="token punctuation">::</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">"long string is long"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> s2 <span class="token operator">=</span> <span class="token class-name">String</span><span class="token punctuation">::</span><span class="token function">from</span><span class="token punctuation">(</span><span class="token string">"xyz"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
     <span class="token keyword">let</span> result<span class="token punctuation">;</span>
     <span class="token punctuation">{</span>
         <span class="token keyword">let</span> rs1 <span class="token operator">=</span> <span class="token operator">&amp;</span>s1<span class="token punctuation">;</span>
         <span class="token keyword">let</span> rs2 <span class="token operator">=</span> <span class="token operator">&amp;</span>s2<span class="token punctuation">;</span>
         result <span class="token operator">=</span> <span class="token function">longest</span><span class="token punctuation">(</span>rs1<span class="token punctuation">,</span> rs2<span class="token punctuation">)</span><span class="token punctuation">;</span>
     <span class="token punctuation">}</span>
-    <span class="token function">println!</span><span class="token punctuation">(</span><span class="token string">"The longest string is {}"</span><span class="token punctuation">,</span> result<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token macro property">println!</span><span class="token punctuation">(</span><span class="token string">"The longest string is {}"</span><span class="token punctuation">,</span> result<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 </code></pre>
 <p>In this example, lifetime <code>'a</code> is associated with both <code>rs1</code> and
@@ -189,11 +189,11 @@ scope(\text{r})</annotation></semantics></math></span><span class="katex-html" a
 The constraints in the <code>where</code> clause are necessary in order to
 satisfy the assignment rule.  There are also two implied constraints
 from the struct reference rule: <code>'a: 'b</code> and <code>'c: 'd</code>.</p>
-<pre class=" language-rust"><code class=" language-rust"><span class="token keyword">struct</span> S<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
-    x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> u32<span class="token punctuation">,</span>
+<pre class=" language-rust" tabindex="0"><code class=" language-rust"><span class="token keyword">struct</span> <span class="token type-definition class-name">S</span><span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
+    x<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'a</span> <span class="token keyword">u32</span><span class="token punctuation">,</span>
 <span class="token punctuation">}</span>
 
-<span class="token keyword">fn</span> foo<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a,</span> <span class="token lifetime-annotation symbol">'b,</span> <span class="token lifetime-annotation symbol">'c,</span> <span class="token lifetime-annotation symbol">'d</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>s<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'b</span> S<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a</span><span class="token operator">&gt;</span><span class="token punctuation">)</span> <span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'d</span> S<span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'c</span><span class="token operator">&gt;</span> <span class="token keyword">where</span> <span class="token lifetime-annotation symbol">'a:</span> <span class="token lifetime-annotation symbol">'c,</span> <span class="token lifetime-annotation symbol">'b:</span> <span class="token lifetime-annotation symbol">'d</span> <span class="token punctuation">{</span>
+<span class="token keyword">fn</span> <span class="token function-definition function">foo</span><span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a</span><span class="token punctuation">,</span> <span class="token lifetime-annotation symbol">'b</span><span class="token punctuation">,</span> <span class="token lifetime-annotation symbol">'c</span><span class="token punctuation">,</span> <span class="token lifetime-annotation symbol">'d</span><span class="token operator">&gt;</span><span class="token punctuation">(</span>s<span class="token punctuation">:</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'b</span> <span class="token class-name">S</span><span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'a</span><span class="token operator">&gt;</span><span class="token punctuation">)</span> <span class="token punctuation">-&gt;</span> <span class="token operator">&amp;</span><span class="token lifetime-annotation symbol">'d</span> <span class="token class-name">S</span><span class="token operator">&lt;</span><span class="token lifetime-annotation symbol">'c</span><span class="token operator">&gt;</span> <span class="token keyword">where</span> <span class="token lifetime-annotation symbol">'a</span><span class="token punctuation">:</span> <span class="token lifetime-annotation symbol">'c</span><span class="token punctuation">,</span> <span class="token lifetime-annotation symbol">'b</span><span class="token punctuation">:</span> <span class="token lifetime-annotation symbol">'d</span> <span class="token punctuation">{</span>
     s
 <span class="token punctuation">}</span>
 </code></pre>
@@ -203,14 +203,14 @@ used to emulate lifetimes of data objects at runtime.  However, static
 lifetimes could be different to runtime lifetimes, as shown in the
 following example:</p>
 <div class="badcode"></div>
-<pre class=" language-rust"><code class=" language-rust"><span class="token attribute attr-name">#[derive(Debug)]</span>
-<span class="token keyword">struct</span> S <span class="token punctuation">{</span><span class="token punctuation">}</span>
+<pre class=" language-rust" tabindex="0"><code class=" language-rust"><span class="token attribute attr-name">#[derive(Debug)]</span>
+<span class="token keyword">struct</span> <span class="token type-definition class-name">S</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
 
-<span class="token keyword">fn</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-    <span class="token keyword">let</span> x <span class="token operator">=</span> S <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token keyword">fn</span> <span class="token function-definition function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> x <span class="token operator">=</span> <span class="token class-name">S</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
     <span class="token keyword">let</span> y <span class="token operator">=</span> <span class="token operator">&amp;</span>x<span class="token punctuation">;</span>
     <span class="token keyword">let</span> z <span class="token operator">=</span> x<span class="token punctuation">;</span>
-    <span class="token function">println!</span><span class="token punctuation">(</span><span class="token string">"{:?}"</span><span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token macro property">println!</span><span class="token punctuation">(</span><span class="token string">"{:?}"</span><span class="token punctuation">,</span> y<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 </code></pre>
 <p>An instance of struct <code>S</code> is first bound to <code>x</code>, then moved to <code>z</code>.

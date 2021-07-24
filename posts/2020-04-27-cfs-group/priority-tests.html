@@ -54,12 +54,12 @@ each new session, and the group weights overrides pricess priorities.
 So with autogrouping enabled, changing process priorities may not have
 any effect.</p>
 <p>Run the following command to disable autogroup:</p>
-<pre class=" language-text"><code class=" language-text">root@emu:~# echo 0 &gt; /proc/sys/kernel/sched_autogroup_enabled
+<pre class=" language-text" tabindex="0"><code class=" language-text">root@emu:~# echo 0 &gt; /proc/sys/kernel/sched_autogroup_enabled
 </code></pre>
 <p>The test script is at <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2020-04-27-cfs-group/loadtest/genload.py">genload.py</a></p>
 <h2 id="test-1">Test 1 <a class="header-anchor" href="#test-1">¶</a></h2>
 <p>In the 1st terminal:</p>
-<pre class=" language-text"><code class=" language-text">root@emu:~# python3 genload.py 
+<pre class=" language-text" tabindex="0"><code class=" language-text">root@emu:~# python3 genload.py 
 ...
 [02:03:07] count 1,892,493 pcpu 73(73) exec_time 491(491)
 ... (renice 2nd process)
@@ -68,7 +68,7 @@ any effect.</p>
 [02:03:10] count 2,060,509 pcpu 72(72) exec_time 547(547)
 </code></pre>
 <p>In the 2nd terminal:</p>
-<pre class=" language-text"><code class=" language-text">root@emu:~# python3 genload.py 
+<pre class=" language-text" tabindex="0"><code class=" language-text">root@emu:~# python3 genload.py 
 ...
 [02:03:07] count 1,921,506 pcpu 49(49) exec_time 490(490)
 ... (renice +1)
@@ -78,7 +78,7 @@ any effect.</p>
 </code></pre>
 <h2 id="test-2">Test 2 <a class="header-anchor" href="#test-2">¶</a></h2>
 <p>In the 1st terminal:</p>
-<pre class=" language-text"><code class=" language-text">root@emu:~# python3 genload.py 
+<pre class=" language-text" tabindex="0"><code class=" language-text">root@emu:~# python3 genload.py 
 ...
 [02:34:18] count 951,643 pcpu 73(73) exec_time 248(248)
 [02:34:19] count 1,006,798 pcpu 71(71) exec_time 237(237)
@@ -87,7 +87,7 @@ any effect.</p>
 [02:34:21] count 869,612 pcpu 68(68) exec_time 206(206)
 </code></pre>
 <p>In the other 3 terminals:</p>
-<pre class=" language-text"><code class=" language-text">root@emu:~# python3 genload.py
+<pre class=" language-text" tabindex="0"><code class=" language-text">root@emu:~# python3 genload.py
 ...
 [02:34:18] count 974,679 pcpu 22(22) exec_time 247(247)
 [02:34:19] count 943,301 pcpu 23(23) exec_time 242(242)

@@ -52,9 +52,9 @@ Here are some notes on the malloc code.
 <p><code>malloc()</code> uses <code>sbrk()</code> or <code>mmap()</code> to request memory pages from OS,
 then uses its internal data structure, "chunks", to organize blocks of
 memories.  The following shows the chunk struct:</p>
-<pre class=" language-c"><code class=" language-c"><span class="token keyword">struct</span> <span class="token class-name">malloc_chunk</span> <span class="token punctuation">{</span>
-  size_t      mchunk_prev_size<span class="token punctuation">;</span>  <span class="token comment">/* Size of previous chunk (if free).  */</span>
-  size_t      mchunk_size<span class="token punctuation">;</span>       <span class="token comment">/* Size in bytes, including overhead. */</span>
+<pre class=" language-c" tabindex="0"><code class=" language-c"><span class="token keyword">struct</span> <span class="token class-name">malloc_chunk</span> <span class="token punctuation">{</span>
+  <span class="token class-name">size_t</span>      mchunk_prev_size<span class="token punctuation">;</span>  <span class="token comment">/* Size of previous chunk (if free).  */</span>
+  <span class="token class-name">size_t</span>      mchunk_size<span class="token punctuation">;</span>       <span class="token comment">/* Size in bytes, including overhead. */</span>
 
   <span class="token keyword">struct</span> <span class="token class-name">malloc_chunk</span><span class="token operator">*</span> fd<span class="token punctuation">;</span>         <span class="token comment">/* double links -- used only if free. */</span>
   <span class="token keyword">struct</span> <span class="token class-name">malloc_chunk</span><span class="token operator">*</span> bk<span class="token punctuation">;</span>
@@ -68,14 +68,14 @@ memories.  The following shows the chunk struct:</p>
 </code></pre>
 <p>The fields <code>mchunk_prev_size</code> and <code>mchunk_size</code> connects chunks in
 memory pages.  For example, the following macros get adjacent chuncks:</p>
-<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">define</span> PREV_INUSE 0x1</span>
-<span class="token macro property">#<span class="token directive keyword">define</span> IS_MMAPPED 0x2</span>
-<span class="token macro property">#<span class="token directive keyword">define</span> NON_MAIN_ARENA 0x4</span>
+<pre class=" language-c" tabindex="0"><code class=" language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">PREV_INUSE</span> <span class="token expression"><span class="token number">0x1</span></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">IS_MMAPPED</span> <span class="token expression"><span class="token number">0x2</span></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">NON_MAIN_ARENA</span> <span class="token expression"><span class="token number">0x4</span></span></span>
 
-<span class="token macro property">#<span class="token directive keyword">define</span> SIZE_BITS (PREV_INUSE | IS_MMAPPED | NON_MAIN_ARENA)</span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">SIZE_BITS</span> <span class="token expression"><span class="token punctuation">(</span>PREV_INUSE <span class="token operator">|</span> IS_MMAPPED <span class="token operator">|</span> NON_MAIN_ARENA<span class="token punctuation">)</span></span></span>
 
-<span class="token macro property">#<span class="token directive keyword">define</span> next_chunk(p) ((mchunkptr)(((char *)(p)) + (p)-&gt;mchunk_size &amp; ~(SIZE_BITS)))</span>
-<span class="token macro property">#<span class="token directive keyword">define</span> prev_chunk(p) ((mchunkptr)(((char *)(p)) - (p)-&gt;mchunk_prev_size))</span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">next_chunk</span><span class="token expression"><span class="token punctuation">(</span>p<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>mchunkptr<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">char</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token punctuation">(</span>p<span class="token punctuation">)</span><span class="token operator">-&gt;</span>mchunk_size <span class="token operator">&amp;</span> <span class="token operator">~</span><span class="token punctuation">(</span>SIZE_BITS<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">prev_chunk</span><span class="token expression"><span class="token punctuation">(</span>p<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>mchunkptr<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">char</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token punctuation">(</span>p<span class="token punctuation">)</span><span class="token operator">-&gt;</span>mchunk_prev_size<span class="token punctuation">)</span><span class="token punctuation">)</span></span></span>
 </code></pre>
 <p>Free chunks are put into "bins" according to the chunk sizes.  Bins
 are double-linked lists of chunks that are connected via the <code>fd</code>,
@@ -86,12 +86,12 @@ address at field <code>fd</code>.  The fields <code>fd</code>, <code>bk</code>, 
 <code>bk_nextsize</code> are shared with user data.  The following macros
 convert between the returned memory address and its corresponding
 chunk address:</p>
-<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">define</span> chunk2mem(p)   ((void*)((char*)(p) + 2*SIZE_SZ))</span>
-<span class="token macro property">#<span class="token directive keyword">define</span> mem2chunk(mem) ((mchunkptr)((char*)(mem) - 2*SIZE_SZ))</span>
+<pre class=" language-c" tabindex="0"><code class=" language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">chunk2mem</span><span class="token expression"><span class="token punctuation">(</span>p<span class="token punctuation">)</span>   <span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">void</span><span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">char</span><span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">2</span><span class="token operator">*</span>SIZE_SZ<span class="token punctuation">)</span><span class="token punctuation">)</span></span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">mem2chunk</span><span class="token expression"><span class="token punctuation">(</span>mem<span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>mchunkptr<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token keyword">char</span><span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>mem<span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token number">2</span><span class="token operator">*</span>SIZE_SZ<span class="token punctuation">)</span><span class="token punctuation">)</span></span></span>
 </code></pre>
 <h2 id="2.-bins">2. bins <a class="header-anchor" href="#2.-bins">¶</a></h2>
 <p>The bins array is defined in <code>struct malloc_state</code>:</p>
-<pre class=" language-c"><code class=" language-c"><span class="token keyword">struct</span> <span class="token class-name">malloc_state</span> <span class="token punctuation">{</span>
+<pre class=" language-c" tabindex="0"><code class=" language-c"><span class="token keyword">struct</span> <span class="token class-name">malloc_state</span> <span class="token punctuation">{</span>
   <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
   mchunkptr bins<span class="token punctuation">[</span>NBINS <span class="token operator">*</span> <span class="token number">2</span> <span class="token operator">-</span> <span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
   <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
@@ -102,7 +102,7 @@ Each header contains a forward pointer and a backward pointer, thus
 the array size has <code>NBINS*2</code>.</p>
 <p>Certain constants are used to compute bin indexes.  The following
 lists some of these constants on x86_64 systems:</p>
-<pre class=" language-c"><code class=" language-c">SIZE_SZ           <span class="token number">8</span>
+<pre class=" language-c" tabindex="0"><code class=" language-c">SIZE_SZ           <span class="token number">8</span>
 MALLOC_ALIGNMENT  <span class="token number">16</span>
 MIN_CHUNK_SIZE    <span class="token number">32</span>
 MINSIZE           <span class="token number">32</span>
@@ -199,11 +199,11 @@ failure that outputs error messages like "double free or corruption
 shared with the caller, if certain data is modified after the chunk is
 freed, the process could have undefined behavior.  The following
 <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2020-11-23-malloc/segfault.c">code</a> shows a segfault example:</p>
-<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h&gt;</span></span>
-<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h&gt;</span></span>
-<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;malloc.h&gt;</span></span>
+<pre class=" language-c" tabindex="0"><code class=" language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h&gt;</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h&gt;</span></span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">include</span> <span class="token string">&lt;malloc.h&gt;</span></span>
 
-<span class="token macro property">#<span class="token directive keyword">define</span> S_TCACHE 10</span>
+<span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name">S_TCACHE</span> <span class="token expression"><span class="token number">10</span></span></span>
 
 <span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
 <span class="token punctuation">{</span>

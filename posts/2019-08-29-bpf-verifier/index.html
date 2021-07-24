@@ -48,24 +48,24 @@
     <h2 id="the-faulty-code">The faulty code <a class="header-anchor" href="#the-faulty-code">¶</a></h2>
 <p>At first I used the following <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_bad.c">code</a> to
 access skb data:</p>
-<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">define</span> ensure_header(skb, offset, hdr)				\
-({								\
-	u32 tot_len = offset + sizeof(*hdr);			\
-	void *data = (void *)(long)skb-&gt;data;			\
-	void *data_end = (void *)(long)skb-&gt;data_end;		\
-								\
-	if (data + tot_len &gt; data_end) {			\
-		bpf_skb_pull_data(skb, tot_len);		\
-								\
-		data = (void *)(long)skb-&gt;data;			\
-		data_end = (void *)(long)skb-&gt;data_end;		\
-								\
-		if (data + tot_len &gt; data_end)			\
-			return TC_ACT_OK;			\
-	}							\
-								\
-	hdr = (void *)(data + offset);				\
-})</span>
+<pre class=" language-c" tabindex="0"><code class=" language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">ensure_header</span><span class="token expression"><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> offset<span class="token punctuation">,</span> hdr<span class="token punctuation">)</span>				</span><span class="token punctuation">\</span>
+<span class="token expression"><span class="token punctuation">(</span><span class="token punctuation">{</span>								</span><span class="token punctuation">\</span>
+	<span class="token expression">u32 tot_len <span class="token operator">=</span> offset <span class="token operator">+</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span><span class="token operator">*</span>hdr<span class="token punctuation">)</span><span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
+	<span class="token expression"><span class="token keyword">void</span> <span class="token operator">*</span>data <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data<span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
+	<span class="token expression"><span class="token keyword">void</span> <span class="token operator">*</span>data_end <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data_end<span class="token punctuation">;</span>		</span><span class="token punctuation">\</span>
+								<span class="token punctuation">\</span>
+	<span class="token expression"><span class="token keyword">if</span> <span class="token punctuation">(</span>data <span class="token operator">+</span> tot_len <span class="token operator">&gt;</span> data_end<span class="token punctuation">)</span> <span class="token punctuation">{</span>			</span><span class="token punctuation">\</span>
+		<span class="token expression"><span class="token function">bpf_skb_pull_data</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> tot_len<span class="token punctuation">)</span><span class="token punctuation">;</span>		</span><span class="token punctuation">\</span>
+								<span class="token punctuation">\</span>
+		<span class="token expression">data <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data<span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
+		<span class="token expression">data_end <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data_end<span class="token punctuation">;</span>		</span><span class="token punctuation">\</span>
+								<span class="token punctuation">\</span>
+		<span class="token expression"><span class="token keyword">if</span> <span class="token punctuation">(</span>data <span class="token operator">+</span> tot_len <span class="token operator">&gt;</span> data_end<span class="token punctuation">)</span>			</span><span class="token punctuation">\</span>
+			<span class="token expression"><span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
+	<span class="token expression"><span class="token punctuation">}</span>							</span><span class="token punctuation">\</span>
+								<span class="token punctuation">\</span>
+	<span class="token expression">hdr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>data <span class="token operator">+</span> offset<span class="token punctuation">)</span><span class="token punctuation">;</span>				</span><span class="token punctuation">\</span>
+<span class="token expression"><span class="token punctuation">}</span><span class="token punctuation">)</span></span></span>
 
 <span class="token keyword">__attribute__</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token function">section</span><span class="token punctuation">(</span><span class="token string">"main"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
 <span class="token keyword">int</span> <span class="token function">handle_skb</span><span class="token punctuation">(</span><span class="token keyword">struct</span> <span class="token class-name">sk_buff</span> <span class="token operator">*</span>skb<span class="token punctuation">)</span>
@@ -96,7 +96,7 @@ field to compute IP header length, then it reads the TCP header <code>doff</code
 field to compute TCP header length.  Both accesses are guarded by the
 macro <code>ensure_header()</code> to ensure that data is available.</p>
 <p>The clang compiler generates the following bpf <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_bad.s">assembly</a>:</p>
-<pre class=" language-text"><code class=" language-text">       0: 	r6 = r1
+<pre class=" language-text" tabindex="0"><code class=" language-text">       0: 	r6 = r1
        1: 	r1 = 680997
        2: 	*(u32 *)(r10 - 4) = r1
        3: 	r2 = *(u32 *)(r6 + 80)        ; data_end = skb-&gt;data_end
@@ -147,7 +147,7 @@ LBB0_6:
 </code></pre>
 <p>When loading the bpf program, the verifier rejects the program with an
 error:</p>
-<pre class=" language-text"><code class=" language-text"># tc filter add dev wlan0 egress bpf da obj demo_bad.o sec main
+<pre class=" language-text" tabindex="0"><code class=" language-text"># tc filter add dev wlan0 egress bpf da obj demo_bad.o sec main
 ...
 36: (71) r3 = *(u8 *)(r1 +12)
 invalid access to packet, off=12 size=1, R1(id=3,off=0,r=0)
@@ -164,7 +164,7 @@ the verifier is happy.</p>
 <p>After a little bit reading of the bpf verifier, I found that bpf
 packet access instructions should follow a pattern similar to
 <code>#13-#16</code> in the above assembly code:</p>
-<pre class=" language-text"><code class=" language-text">      13: 	r3 = r1			      ; r1 is skb-&gt;data + x
+<pre class=" language-text" tabindex="0"><code class=" language-text">      13: 	r3 = r1			      ; r1 is skb-&gt;data + x
       14: 	r3 += 34
       15: 	if r3 &gt; r2 goto +27 &lt;LBB0_6&gt;  ; if (data + tot_len &gt; data_end)
       16: 	r8 = *(u8 *)(r1 + 14)         ; r8 = ip4-&gt;ihl
@@ -203,22 +203,22 @@ other hand, we could write C code in a certain way to make the
 compiler generate the desired instructions.</p>
 <p>The following is the valid <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_good.c">code</a> that I
 came up with:</p>
-<pre class=" language-c"><code class=" language-c"><span class="token macro property">#<span class="token directive keyword">define</span> ensure_header(skb, var_off, const_off, hdr)		\
-({								\
-	u32 len = const_off + sizeof(*hdr);			\
-	void *data = (void *)(long)skb-&gt;data + var_off;		\
-	void *data_end = (void *)(long)skb-&gt;data_end;		\
-								\
-	if (data + len &gt; data_end)				\
-		bpf_skb_pull_data(skb, var_off + len);		\
-								\
-	data = (void *)(long)skb-&gt;data + var_off;		\
-	data_end = (void *)(long)skb-&gt;data_end;			\
-	if (data + len &gt; data_end)				\
-		return TC_ACT_OK;				\
-								\
-	hdr = (void *)(data + const_off);			\
-})</span>
+<pre class=" language-c" tabindex="0"><code class=" language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">ensure_header</span><span class="token expression"><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> var_off<span class="token punctuation">,</span> const_off<span class="token punctuation">,</span> hdr<span class="token punctuation">)</span>		</span><span class="token punctuation">\</span>
+<span class="token expression"><span class="token punctuation">(</span><span class="token punctuation">{</span>								</span><span class="token punctuation">\</span>
+	<span class="token expression">u32 len <span class="token operator">=</span> const_off <span class="token operator">+</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span><span class="token operator">*</span>hdr<span class="token punctuation">)</span><span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
+	<span class="token expression"><span class="token keyword">void</span> <span class="token operator">*</span>data <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data <span class="token operator">+</span> var_off<span class="token punctuation">;</span>		</span><span class="token punctuation">\</span>
+	<span class="token expression"><span class="token keyword">void</span> <span class="token operator">*</span>data_end <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data_end<span class="token punctuation">;</span>		</span><span class="token punctuation">\</span>
+								<span class="token punctuation">\</span>
+	<span class="token expression"><span class="token keyword">if</span> <span class="token punctuation">(</span>data <span class="token operator">+</span> len <span class="token operator">&gt;</span> data_end<span class="token punctuation">)</span>				</span><span class="token punctuation">\</span>
+		<span class="token expression"><span class="token function">bpf_skb_pull_data</span><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> var_off <span class="token operator">+</span> len<span class="token punctuation">)</span><span class="token punctuation">;</span>		</span><span class="token punctuation">\</span>
+								<span class="token punctuation">\</span>
+	<span class="token expression">data <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data <span class="token operator">+</span> var_off<span class="token punctuation">;</span>		</span><span class="token punctuation">\</span>
+	<span class="token expression">data_end <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data_end<span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
+	<span class="token expression"><span class="token keyword">if</span> <span class="token punctuation">(</span>data <span class="token operator">+</span> len <span class="token operator">&gt;</span> data_end<span class="token punctuation">)</span>				</span><span class="token punctuation">\</span>
+		<span class="token expression"><span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>				</span><span class="token punctuation">\</span>
+								<span class="token punctuation">\</span>
+	<span class="token expression">hdr <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span>data <span class="token operator">+</span> const_off<span class="token punctuation">)</span><span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
+<span class="token expression"><span class="token punctuation">}</span><span class="token punctuation">)</span></span></span>
 
 <span class="token keyword">__attribute__</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token function">section</span><span class="token punctuation">(</span><span class="token string">"main"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
 <span class="token keyword">int</span> <span class="token function">handle_skb</span><span class="token punctuation">(</span><span class="token keyword">struct</span> <span class="token class-name">sk_buff</span> <span class="token operator">*</span>skb<span class="token punctuation">)</span>
