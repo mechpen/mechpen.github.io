@@ -52,7 +52,7 @@ container.
 </p>
     <h2 id="1.-how-cpu-requests-work">1. How CPU requests work <a class="header-anchor" href="#1.-how-cpu-requests-work">¶</a></h2>
 <p>In kubernetes, a pod container specifies CPU resources as follows:</p>
-<pre class=" language-yaml"><code class=" language-yaml">apiVersion: v1
+<pre class=" language-yaml" tabindex="0"><code class=" language-yaml">apiVersion: v1
 kind: Pod
 metadata:
   name: foo
@@ -77,13 +77,13 @@ more details on CFS and <code>cpu.shares</code>.</p>
 <p>In kubernetes, one CPU provides 1024 shares.  For example, if a node
 has 8 allocatable CPU, then the total number of CPU shares is
 1024*8=8192 as shown below:</p>
-<pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpu/kubepods/cpu.shares
+<pre class=" language-text" tabindex="0"><code class=" language-text"># cat /sys/fs/cgroup/cpu/kubepods/cpu.shares
 8192
 </code></pre>
 <p>The container's <code>cpu.shares</code> is allocated from the total shares
 according to this CPU requests in the pod manifest.  In the above
 example, container "foo" requests 1 CPU and has shares value "1024":</p>
-<pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpu/kubepods/&lt;pod_foo&gt;/&lt;container_foo&gt;/cpu.shares
+<pre class=" language-text" tabindex="0"><code class=" language-text"># cat /sys/fs/cgroup/cpu/kubepods/&lt;pod_foo&gt;/&lt;container_foo&gt;/cpu.shares
 1024
 </code></pre>
 <h2 id="2.-why-cpu-request-does-not-work">2. Why CPU request does not work <a class="header-anchor" href="#2.-why-cpu-request-does-not-work">¶</a></h2>
@@ -104,11 +104,11 @@ policy</a>
 that can "exclusively" allocate CPUs to a container by using the
 <code>cpuset</code> cgroup.</p>
 <p>For example, if CPU 1 is assigned to container "foo".  Then we have:</p>
-<pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpuset/kubepods/&lt;pod_foo&gt;/&lt;container_foo&gt;/cpuset.cpus
+<pre class=" language-text" tabindex="0"><code class=" language-text"># cat /sys/fs/cgroup/cpuset/kubepods/&lt;pod_foo&gt;/&lt;container_foo&gt;/cpuset.cpus
 1
 </code></pre>
 <p>For any other pod container, we have:</p>
-<pre class=" language-text"><code class=" language-text"># cat /sys/fs/cgroup/cpuset/kubepods/&lt;pod_bar&gt;/&lt;container_bar&gt;/cpuset.cpus
+<pre class=" language-text" tabindex="0"><code class=" language-text"># cat /sys/fs/cgroup/cpuset/kubepods/&lt;pod_bar&gt;/&lt;container_bar&gt;/cpuset.cpus
 0,2-7
 </code></pre>
 <p>Thus processes in the other containers are not scheduled on CPU 1.</p>

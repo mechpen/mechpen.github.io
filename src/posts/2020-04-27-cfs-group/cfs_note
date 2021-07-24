@@ -283,6 +283,26 @@ _do_fork()
         --> update_load_avg(cfs_rq_of(se), se, UPDATE_TG); // for each cpu and parent
 	--> update_cfs_group(se); // for each cpu and parent
 
+For cgroup v2:
+
+static int cpu_weight_write_u64(struct cgroup_subsys_state *css,
+				struct cftype *cft, u64 weight)
+{
+	/*
+	 * cgroup weight knobs should use the common MIN, DFL and MAX
+	 * values which are 1, 100 and 10000 respectively.  While it loses
+	 * a bit of range on both ends, it maps pretty well onto the shares
+	 * value used by scheduler and the round-trip conversions preserve
+	 * the original value over the entire range.
+	 */
+	if (weight < CGROUP_WEIGHT_MIN || weight > CGROUP_WEIGHT_MAX)
+		return -ERANGE;
+
+	weight = DIV_ROUND_CLOSEST_ULL(weight * 1024, CGROUP_WEIGHT_DFL);
+
+	return sched_group_set_shares(css_tg(css), scale_load(weight));
+}
+
 * Q and A
 
 Q: Is there an epoch that all vruntime starts? What's the initial

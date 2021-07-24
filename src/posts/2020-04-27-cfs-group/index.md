@@ -10,6 +10,8 @@ excerpt: |
 
 ---
 
+**Update** [Jul/21]: Added info for cgroup v2 in section 3.2.
+
 ## 1. CFS concepts
 
 In CFS, every running entity, a process or a task group, has a virtual
@@ -403,3 +405,9 @@ sessions, changing the nice values of the processes does not affect
 the their relative priorities.  See [`man 7
 sched`](http://man7.org/linux/man-pages/man7/sched.7.html) for more
 info about the autogroup feature.
+
+### 3.2. Cgroup v2
+
+In cgroup v2, the `cpu.shares` is renamed to `cpu.weight`, which has a
+default value of 100.  The value is rescaled to 1024 in the function
+`cpu_weight_write_u64`.
