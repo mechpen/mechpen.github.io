@@ -15,6 +15,8 @@ $ dmesg | grep vga
 
 Solution: compile vga driver as builtin.
 
+Also set `TTYVTDisallocate=no` and etc in systemd `getty@tty1.service`.
+
 ## does not show boot messages except boot logo
 
 Solution: need to set
