@@ -1,0 +1,74 @@
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+    
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="page">
+  <h1></h1>
+
+  <div class="entry">
+    <h2 id="boot-logo-disappear-during-boot" tabindex="-1"><a class="header-anchor" href="#boot-logo-disappear-during-boot">boot logo disappear during boot</a></h2>
+<p>Cause by mode vga mode change.  Kernel message:</p>
+<pre><code>$ dmesg | grep vga
+[    0.454837] pci 0000:00:02.0: vgaarb: setting as boot VGA device
+[    0.454837] pci 0000:00:02.0: vgaarb: VGA device added: decodes=io+mem,owns=io+mem,locks=none
+[    0.454837] pci 0000:00:02.0: vgaarb: bridge control possible
+[    0.454837] vgaarb: loaded
+[    0.528910] i915 0000:00:02.0: vgaarb: deactivate vga console
+[    0.542412] i915 0000:00:02.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=io+mem:owns=io+mem
+[   17.555855] vga_switcheroo: enabled
+</code></pre>
+<p>Solution: compile vga driver as builtin.</p>
+<p>Also set <code>TTYVTDisallocate=no</code> and etc in systemd <code>getty@tty1.service</code>.</p>
+<h2 id="does-not-show-boot-messages-except-boot-logo" tabindex="-1"><a class="header-anchor" href="#does-not-show-boot-messages-except-boot-logo">does not show boot messages except boot logo</a></h2>
+<p>Solution: need to set</p>
+<pre><code># Enable legacy fbdev support for your modesetting driver
+CONFIG_DRM_FBDEV_EMULATION=y
+</code></pre>
+<h2 id="boot-logo-flash-in-early-boot" tabindex="-1"><a class="header-anchor" href="#boot-logo-flash-in-early-boot">boot logo flash in early boot</a></h2>
+<p>Solution: may need to disable the following</p>
+<pre><code>CONFIG_FB_MODE_HELPERS=n
+CONFIG_FB_SIMPLE=n
+
+</code></pre>
+
+  </div>
+</article>
+
+    </div>
+  
+
+</body></html>

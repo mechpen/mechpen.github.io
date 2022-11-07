@@ -40,7 +40,7 @@
   <h1>AWS</h1>
 
   <div class="entry">
-    <h2 id="load-balancers">load balancers <a class="header-anchor" href="#load-balancers">¶</a></h2>
+    <h2 id="load-balancers" tabindex="-1"><a class="header-anchor" href="#load-balancers">load balancers</a></h2>
 <ul>
 <li>
 <p><strong>Classic TCP ELB</strong> works like TCP proxy.  It creates 2 back to back
@@ -56,12 +56,12 @@ security group.  The instance security group need to allow incoming
 traffic from public internet.</p>
 </li>
 </ul>
-<h2 id="aws-cli">aws cli <a class="header-anchor" href="#aws-cli">¶</a></h2>
+<h2 id="aws-cli" tabindex="-1"><a class="header-anchor" href="#aws-cli">aws cli</a></h2>
 <p>who am i:</p>
-<pre class=" language-text" tabindex="0"><code class=" language-text">aws sts get-caller-identity
+<pre class="language-text" tabindex="0"><code class="language-text">aws sts get-caller-identity
 </code></pre>
 <p>get instance role and credentials</p>
-<pre class=" language-text" tabindex="0"><code class=" language-text">curl http://169.254.169.254/latest/meta-data/iam/security-credentials
+<pre class="language-text" tabindex="0"><code class="language-text">curl http://169.254.169.254/latest/meta-data/iam/security-credentials
 </code></pre>
 
   </div>

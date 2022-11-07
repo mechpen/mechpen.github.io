@@ -45,10 +45,10 @@
 
   <div class="entry">
     <p>Linux bpf verifier allows only one specific pattern for accessing skb data.  To help the clang compiler generate the required access pattern, we have to write C code in a certain way to reflect this pattern.</p>
-    <h2 id="the-faulty-code">The faulty code <a class="header-anchor" href="#the-faulty-code">¶</a></h2>
+    <h2 id="the-faulty-code" tabindex="-1"><a class="header-anchor" href="#the-faulty-code">The faulty code</a></h2>
 <p>At first I used the following <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_bad.c">code</a> to
 access skb data:</p>
-<pre class=" language-c" tabindex="0"><code class=" language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">ensure_header</span><span class="token expression"><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> offset<span class="token punctuation">,</span> hdr<span class="token punctuation">)</span>				</span><span class="token punctuation">\</span>
+<pre class="language-c" tabindex="0"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">ensure_header</span><span class="token expression"><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> offset<span class="token punctuation">,</span> hdr<span class="token punctuation">)</span>				</span><span class="token punctuation">\</span>
 <span class="token expression"><span class="token punctuation">(</span><span class="token punctuation">{</span>								</span><span class="token punctuation">\</span>
 	<span class="token expression">u32 tot_len <span class="token operator">=</span> offset <span class="token operator">+</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span><span class="token operator">*</span>hdr<span class="token punctuation">)</span><span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
 	<span class="token expression"><span class="token keyword">void</span> <span class="token operator">*</span>data <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data<span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
@@ -96,7 +96,7 @@ field to compute IP header length, then it reads the TCP header <code>doff</code
 field to compute TCP header length.  Both accesses are guarded by the
 macro <code>ensure_header()</code> to ensure that data is available.</p>
 <p>The clang compiler generates the following bpf <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_bad.s">assembly</a>:</p>
-<pre class=" language-text" tabindex="0"><code class=" language-text">       0: 	r6 = r1
+<pre class="language-text" tabindex="0"><code class="language-text">       0: 	r6 = r1
        1: 	r1 = 680997
        2: 	*(u32 *)(r10 - 4) = r1
        3: 	r2 = *(u32 *)(r6 + 80)        ; data_end = skb-&gt;data_end
@@ -147,7 +147,7 @@ LBB0_6:
 </code></pre>
 <p>When loading the bpf program, the verifier rejects the program with an
 error:</p>
-<pre class=" language-text" tabindex="0"><code class=" language-text"># tc filter add dev wlan0 egress bpf da obj demo_bad.o sec main
+<pre class="language-text" tabindex="0"><code class="language-text"># tc filter add dev wlan0 egress bpf da obj demo_bad.o sec main
 ...
 36: (71) r3 = *(u8 *)(r1 +12)
 invalid access to packet, off=12 size=1, R1(id=3,off=0,r=0)
@@ -160,11 +160,11 @@ Why the first packet access is OK, but the second access is not?</p>
 has a variable offset.  Is variable offset not allowed?  No.  I
 removed the <code>bpf_skb_pull_data()</code> before the second access and then
 the verifier is happy.</p>
-<h2 id="the-packet-access-pattern">The packet access pattern <a class="header-anchor" href="#the-packet-access-pattern">¶</a></h2>
+<h2 id="the-packet-access-pattern" tabindex="-1"><a class="header-anchor" href="#the-packet-access-pattern">The packet access pattern</a></h2>
 <p>After a little bit reading of the bpf verifier, I found that bpf
 packet access instructions should follow a pattern similar to
 <code>#13-#16</code> in the above assembly code:</p>
-<pre class=" language-text" tabindex="0"><code class=" language-text">      13: 	r3 = r1			      ; r1 is skb-&gt;data + x
+<pre class="language-text" tabindex="0"><code class="language-text">      13: 	r3 = r1			      ; r1 is skb-&gt;data + x
       14: 	r3 += 34
       15: 	if r3 &gt; r2 goto +27 &lt;LBB0_6&gt;  ; if (data + tot_len &gt; data_end)
       16: 	r8 = *(u8 *)(r1 + 14)         ; r8 = ip4-&gt;ihl
@@ -197,13 +197,13 @@ function <code>find_good_pkt_pointers()</code>)</p>
 </ul>
 <p>The <a href="https://github.com/torvalds/linux/blob/9cf6b756cdf2cd38b8b0dac2567f7c6daf5e79d5/kernel/bpf/verifier.c#L5120-L5160">comments</a> in function <code>find_good_pkt_pointers()</code> also explain
 this access pattern.</p>
-<h2 id="the-workaround">The workaround <a class="header-anchor" href="#the-workaround">¶</a></h2>
+<h2 id="the-workaround" tabindex="-1"><a class="header-anchor" href="#the-workaround">The workaround</a></h2>
 <p>We could improve the bpf verifier to make it more flexible.  On the
 other hand, we could write C code in a certain way to make the
 compiler generate the desired instructions.</p>
 <p>The following is the valid <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_good.c">code</a> that I
 came up with:</p>
-<pre class=" language-c" tabindex="0"><code class=" language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">ensure_header</span><span class="token expression"><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> var_off<span class="token punctuation">,</span> const_off<span class="token punctuation">,</span> hdr<span class="token punctuation">)</span>		</span><span class="token punctuation">\</span>
+<pre class="language-c" tabindex="0"><code class="language-c"><span class="token macro property"><span class="token directive-hash">#</span><span class="token directive keyword">define</span> <span class="token macro-name function">ensure_header</span><span class="token expression"><span class="token punctuation">(</span>skb<span class="token punctuation">,</span> var_off<span class="token punctuation">,</span> const_off<span class="token punctuation">,</span> hdr<span class="token punctuation">)</span>		</span><span class="token punctuation">\</span>
 <span class="token expression"><span class="token punctuation">(</span><span class="token punctuation">{</span>								</span><span class="token punctuation">\</span>
 	<span class="token expression">u32 len <span class="token operator">=</span> const_off <span class="token operator">+</span> <span class="token keyword">sizeof</span><span class="token punctuation">(</span><span class="token operator">*</span>hdr<span class="token punctuation">)</span><span class="token punctuation">;</span>			</span><span class="token punctuation">\</span>
 	<span class="token expression"><span class="token keyword">void</span> <span class="token operator">*</span>data <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">void</span> <span class="token operator">*</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token keyword">long</span><span class="token punctuation">)</span>skb<span class="token operator">-&gt;</span>data <span class="token operator">+</span> var_off<span class="token punctuation">;</span>		</span><span class="token punctuation">\</span>
@@ -245,7 +245,7 @@ came up with:</p>
 	<span class="token keyword">return</span> TC_ACT_OK<span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 </code></pre>
-<h2 id="source-code">Source code <a class="header-anchor" href="#source-code">¶</a></h2>
+<h2 id="source-code" tabindex="-1"><a class="header-anchor" href="#source-code">Source code</a></h2>
 <ul>
 <li><a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_common.h">demo_common.h</a></li>
 <li><a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2019-08-29-bpf-verifier/demo_bad.c">demo_bad.c</a></li>

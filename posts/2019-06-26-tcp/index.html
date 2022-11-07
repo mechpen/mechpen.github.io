@@ -76,7 +76,7 @@ ports.  It's rare that multiple connections happen between 2 TCP
 sockets during a short time period.  However, TCP dost not prevent a
 user from specifying a fixed source port for all connections.  The
 randomness of ports is not a requirement of TCP.</p>
-<h2 id="3-way-handshake">3-way handshake <a class="header-anchor" href="#3-way-handshake">¶</a></h2>
+<h2 id="3-way-handshake" tabindex="-1"><a class="header-anchor" href="#3-way-handshake">3-way handshake</a></h2>
 <p>Assume the sequence number rule is satisfied, there's still one
 problem.  When a host receives a SYN packet, it needs to figure out
 whether this packet is stale or not, then it could discard the stale
@@ -90,10 +90,10 @@ connection time?  Theoretically yes according to <a href="https://github.com/mec
 an application cannot accept outstanding data until completion of the
 handshake.  There are several problems with this, for example, SYN
 flood attack.</p>
-<h2 id="initial-sequence-number-in-linux">Initial Sequence Number in Linux <a class="header-anchor" href="#initial-sequence-number-in-linux">¶</a></h2>
+<h2 id="initial-sequence-number-in-linux" tabindex="-1"><a class="header-anchor" href="#initial-sequence-number-in-linux">Initial Sequence Number in Linux</a></h2>
 <p>In Linux the initial sequence number for a TCP connection is computed
 by function <code>secure_tcp_seq()</code>.</p>
-<pre class=" language-c" tabindex="0"><code class=" language-c">u32 <span class="token function">secure_tcp_seq</span><span class="token punctuation">(</span>__be32 saddr<span class="token punctuation">,</span> __be32 daddr<span class="token punctuation">,</span>
+<pre class="language-c" tabindex="0"><code class="language-c">u32 <span class="token function">secure_tcp_seq</span><span class="token punctuation">(</span>__be32 saddr<span class="token punctuation">,</span> __be32 daddr<span class="token punctuation">,</span>
 		   __be16 sport<span class="token punctuation">,</span> __be16 dport<span class="token punctuation">)</span>
 <span class="token punctuation">{</span>
 	u32 hash<span class="token punctuation">;</span>

@@ -37,13 +37,6 @@ h1, h2, h3, h4, h5, h6 {
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
   color: inherit;
 }
-h1 .header-anchor, h2 .header-anchor, h3 .header-anchor, h4 .header-anchor, h5 .header-anchor, h6 .header-anchor {
-  display: none;
-}
-h1:hover .header-anchor, h1:active .header-anchor, h2:hover .header-anchor, h2:active .header-anchor, h3:hover .header-anchor, h3:active .header-anchor, h4:hover .header-anchor, h4:active .header-anchor, h5:hover .header-anchor, h5:active .header-anchor, h6:hover .header-anchor, h6:active .header-anchor {
-  display: inline;
-  color: var(--link-color);
-}
 
 h1 {
   font-size: 1.5em;
@@ -92,8 +85,9 @@ code:not([class]) {
 
 table {
   border-collapse: collapse;
-  width: 100%;
   font-size: 0.8em;
+  margin-left: auto;
+  margin-right: auto;
   margin-top: 15px;
   margin-bottom: 15px;
 }
@@ -193,7 +187,7 @@ nav a {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: calc(100% * .3333);
+  width: 33.33%;
   height: 80px;
   margin-top: 10px;
   color: var(--main-text-color);

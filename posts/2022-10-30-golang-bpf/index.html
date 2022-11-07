@@ -1,0 +1,284 @@
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Tracing golang with bpftrace – Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+    
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <div class="post">
+  <h1>Tracing golang with bpftrace</h1>
+
+  <div class="date">
+    October 30, 2022
+  </div>
+
+  <div class="entry">
+    <p>
+Some tips and findings on tracing go binaries using bpftrace.
+</p>
+    <h2 id="1.-probing-function-calls" tabindex="-1"><a class="header-anchor" href="#1.-probing-function-calls">1. Probing function calls</a></h2>
+<p>For the following <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2022-10-30-golang-bpf/example.go">example code</a>:</p>
+<pre class="language-go" tabindex="0"><code class="language-go"><span class="token keyword">func</span> <span class="token function">mainTest</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+     <span class="token operator">...</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">for</span> <span class="token punctuation">{</span>
+		<span class="token function">mainTest</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		time<span class="token punctuation">.</span><span class="token function">Sleep</span><span class="token punctuation">(</span>time<span class="token punctuation">.</span>Second<span class="token punctuation">)</span>
+	<span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>To trace the function <code>mainTest()</code> function, we could do:</p>
+<pre class="language-text" tabindex="0"><code class="language-text">$ sudo bpftrace -p 19162 -e 'uprobe:./example:main.mainTest {printf("here\n");}'
+Attaching 1 probe...
+</code></pre>
+<p>Sometimes it is easier to use the function address instead of the
+function name. First, use the following command to find the function
+address:</p>
+<pre class="language-text" tabindex="0"><code class="language-text">$ objdump -t example | grep mainTest
+0000000000459e60 g     F .text  00000000000000ea main.mainTest
+</code></pre>
+<p>Then attach the probe to the function address:</p>
+<pre class="language-text" tabindex="0"><code class="language-text">$ sudo bpftrace -p 19162 -e 'uprobe:./example:0x0000000000459e60 {printf("here\n");}'
+Attaching 1 probe...
+</code></pre>
+<h2 id="2.-calling-convention" tabindex="-1"><a class="header-anchor" href="#2.-calling-convention">2. Calling convention</a></h2>
+<p>To figure out go calling conventions, we could compose some simple
+functions, then look at their corresponding assembly code.  For
+example, the following simple function:</p>
+<pre class="language-go" tabindex="0"><code class="language-go"><span class="token keyword">func</span> <span class="token function">fewArgsTest</span><span class="token punctuation">(</span>a1<span class="token punctuation">,</span> a2<span class="token punctuation">,</span> a3<span class="token punctuation">,</span> a4 <span class="token builtin">uint64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">uint64</span><span class="token punctuation">,</span> <span class="token builtin">uint64</span><span class="token punctuation">,</span> <span class="token builtin">uint64</span><span class="token punctuation">,</span> <span class="token builtin">uint64</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">return</span> a1<span class="token operator">+</span><span class="token number">0x11</span><span class="token punctuation">,</span> a2<span class="token operator">+</span><span class="token number">0x22</span><span class="token punctuation">,</span> a3<span class="token operator">+</span><span class="token number">0x33</span><span class="token punctuation">,</span> a4<span class="token operator">+</span><span class="token number">0x44</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>We can get its assembly code:</p>
+<pre class="language-text" tabindex="0"><code class="language-text">$ gdb -batch -ex 'file ./example' -ex 'disassemble 0x0000000000459d20'
+Dump of assembler code for function main.fewArgsTest:
+   0x0000000000459d20 &lt;+0&gt;:     add    $0x11,%rax
+   0x0000000000459d24 &lt;+4&gt;:     add    $0x22,%rbx
+   0x0000000000459d28 &lt;+8&gt;:     add    $0x33,%rcx
+   0x0000000000459d2c &lt;+12&gt;:    add    $0x44,%rdi
+   0x0000000000459d30 &lt;+16&gt;:    ret
+End of assembler dump.
+</code></pre>
+<p>It's easy to see that the four arguments are passed in registers
+<code>rax</code>, <code>rbx</code>, <code>rcx</code>, and <code>rdi</code>.</p>
+<p>This <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2022-10-30-golang-bpf/example.go">example code</a> has more such functions.
+The following are some results for Go 1.19.</p>
+<h3 id="2.1.-simple-args" tabindex="-1"><a class="header-anchor" href="#2.1.-simple-args">2.1. Simple args</a></h3>
+<p>The first 9 args of 8-byte words are passed in registers. The rest
+args are passed in the stack.  Input args are closer to the top of
+stack than output args.</p>
+<table>
+<thead>
+<tr>
+<th>Arg index</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>rax</code></td>
+<td><code>rax</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>rbx</code></td>
+<td><code>rbx</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>rcx</code></td>
+<td><code>rcx</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>rdi</code></td>
+<td><code>rdi</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>rsi</code></td>
+<td><code>rsi</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>r8</code></td>
+<td><code>r8</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>r9</code></td>
+<td><code>r9</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>r10</code></td>
+<td><code>r10</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>r11</code></td>
+<td><code>r11</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>(rsp)+8</code></td>
+<td><code>(rsp)+8+sizeof(input)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="2.2.-struct-args" tabindex="-1"><a class="header-anchor" href="#2.2.-struct-args">2.2. Struct args</a></h3>
+<p>If a struct size is smaller than or equal to 32 bytes, then the struct
+is spread across the registers.  If the struct size is larger than 32
+bytes, then the struct is passed in the stack.</p>
+<h2 id="3.-data-structures" tabindex="-1"><a class="header-anchor" href="#3.-data-structures">3. Data structures</a></h2>
+<p>We can recover the memory layout (fields and offsets) of golang
+structs using gdb.  Here are memory layouts of some basic go objects.</p>
+<h3 id="3.1.-string" tabindex="-1"><a class="header-anchor" href="#3.1.-string">3.1. String</a></h3>
+<p>Strings are tuples of <code>(address, size)</code>.  The <code>bpftrace</code>'s builtin
+function <code>str(address, size)</code> can print go strings.</p>
+<h3 id="3.2.-slice" tabindex="-1"><a class="header-anchor" href="#3.2.-slice">3.2. Slice</a></h3>
+<p>Slices are tuples of <code>(address, len, cap)</code>.</p>
+<h3 id="3.3.-map" tabindex="-1"><a class="header-anchor" href="#3.3.-map">3.3. Map</a></h3>
+<p>Maps are pointers to map structs.</p>
+<h2 id="4.-probing-function-returns" tabindex="-1"><a class="header-anchor" href="#4.-probing-function-returns">4. Probing function returns</a></h2>
+<p>Do not use <code>uretprobe</code> for go because <code>uretprobe</code> could crash the
+process.  For example, the <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2022-10-30-golang-bpf/crash.go">following code</a>:</p>
+<pre class="language-go" tabindex="0"><code class="language-go"><span class="token keyword">func</span> <span class="token function">recursion</span><span class="token punctuation">(</span>level<span class="token punctuation">,</span> maxLevel <span class="token builtin">uint64</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">if</span> level <span class="token operator">&gt;</span> maxLevel <span class="token punctuation">{</span>
+		<span class="token keyword">return</span>
+	<span class="token punctuation">}</span>
+	<span class="token function">recursion</span><span class="token punctuation">(</span>level<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">,</span> maxLevel<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">func</span> <span class="token function">mainTest</span><span class="token punctuation">(</span>maxLevel <span class="token builtin">uint64</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token function">recursion</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> maxLevel<span class="token punctuation">)</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">func</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+	<span class="token keyword">for</span> <span class="token punctuation">{</span>
+		<span class="token keyword">go</span> <span class="token function">mainTest</span><span class="token punctuation">(</span><span class="token number">35</span><span class="token punctuation">)</span>
+		time<span class="token punctuation">.</span><span class="token function">Sleep</span><span class="token punctuation">(</span>time<span class="token punctuation">.</span>Second<span class="token punctuation">)</span>
+	<span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>If a <code>uretprobe</code> is attached to the function <code>mainTest()</code>, the process
+crashes with the following messages:</p>
+<pre class="language-text" tabindex="0"><code class="language-text">$ ./crash
+runtime: g 22: unexpected return pc for main.mainTest called from 0x7fffffffe000
+stack: frame={sp:0xc000100fa8, fp:0xc000100fc8} stack=[0xc000100000,0xc000101000)
+...
+0x000000c000100fa8: &lt;0x0000000000000000  0x0000000000000023 
+0x000000c000100fb8:  0x000000c0000527d0 !0x00007fffffffe000 
+0x000000c000100fc8: &gt;0x0000000000000000  0x0000000000000000
+...
+fatal error: unknown caller pc
+
+runtime stack:
+runtime.throw({0x4a6ab6?, 0x52a940?})
+        /usr/lib/go/src/runtime/panic.go:1047 +0x5d fp=0xc0000998e8 sp=0xc0000998b8 pc=0x43243d
+runtime.gentraceback(...)
+        /usr/lib/go/src/runtime/traceback.go:258 +0x1cf7 fp=0xc000099c58 sp=0xc0000998e8 pc=0x453df7
+runtime.copystack(0xc000182000, 0x800000002?)
+        /usr/lib/go/src/runtime/stack.go:932 +0x2f5 fp=0xc000099e10 sp=0xc000099c58 pc=0x449415
+runtime.newstack()
+        /usr/lib/go/src/runtime/stack.go:1112 +0x497 fp=0xc000099fc8 sp=0xc000099e10 pc=0x449997
+runtime.morestack()
+        /usr/lib/go/src/runtime/asm_amd64.s:570 +0x8b fp=0xc000099fd0 sp=0xc000099fc8 pc=0x45c20b
+...
+</code></pre>
+<h3 id="4.1.-cause-of-the-crash" tabindex="-1"><a class="header-anchor" href="#4.1.-cause-of-the-crash">4.1. Cause of the crash</a></h3>
+<p>Go runtime may move a stack around in order to resizing the stack, as
+shown in the assembly code of the function <code>recursion()</code>:</p>
+<pre class="language-text" tabindex="0"><code class="language-text">$ gdb -batch -ex 'file ./crash' -ex 'disassemble 0x0000000000457c00'
+Dump of assembler code for function main.recursion:
+   0x0000000000457c00 &lt;+0&gt;:     cmp    0x10(%r14),%rsp
+   0x0000000000457c04 &lt;+4&gt;:     jbe    0x457c35 &lt;main.recursion+53&gt;
+   ...
+   0x0000000000457c35 &lt;+53&gt;:    mov    %rax,0x8(%rsp)
+   0x0000000000457c3a &lt;+58&gt;:    mov    %rbx,0x10(%rsp)
+   0x0000000000457c3f &lt;+63&gt;:    nop
+   0x0000000000457c40 &lt;+64&gt;:    call   0x454940 &lt;runtime.morestack_noctxt&gt;
+   0x0000000000457c45 &lt;+69&gt;:    mov    0x8(%rsp),%rax
+   0x0000000000457c4a &lt;+74&gt;:    mov    0x10(%rsp),%rbx
+   0x0000000000457c4f &lt;+79&gt;:    jmp    0x457c00 &lt;main.recursion&gt;
+End of assembler dump.
+</code></pre>
+<p>The function first checks the stack pointer <code>rsp</code>.  If the stack
+pointer is too low, then it calls <code>runtime.morestack_noctxt</code>, which
+may move the current stack to a larger stack.</p>
+<p>Here are the events that lead to a crash:</p>
+<ol>
+<li>
+<p><code>uretprobe</code> installs a trap (<code>int 3</code>) at <code>&amp;mainTest</code>.</p>
+</li>
+<li>
+<p>CPU executes instruction <code>call mainTest</code>.  The return address is
+pushed to the stack.</p>
+</li>
+<li>
+<p>The trap is triggered and the trap handler overwrites the return
+address in the stack with the address of a trampoline code (located
+at <code>0x7fffffffe000</code>), which contains a trap instruction. These 3
+steps are essentially how <code>uretprobe</code> works.</p>
+</li>
+<li>
+<p>The go function <code>recursion()</code> calls <code>runtime.morestack()</code>, which
+moves the stack to a new address and then calls
+<code>runtime.gentraceback()</code> to rebuild the stacktrace from the new
+stack.  Since <code>0x7fffffffe000</code> is not a valid go function return
+address, <code>runtime.gentraceback()</code> throws an "unknown caller pc"
+error.</p>
+</li>
+</ol>
+<h3 id="4.1.-workaround" tabindex="-1"><a class="header-anchor" href="#4.1.-workaround">4.1. Workaround</a></h3>
+<p>Because <code>uretprobe</code> does not work for go, we have to install <code>uprobe</code>
+at every <code>ret</code> location of a function to probe the function returns.
+<a href="https://github.com/mechpen/gotlsdump/blob/e4cb3d/gotlsdump.py">Here</a>
+is an example of doing this programmatically.</p>
+
+  </div>
+</div>
+<div class="vskip"></div>
+<script src="https://utteranc.es/client.js" repo="mechpen/mechpen.github.io" issue-term="pathname" label="comment" theme="github-light" crossorigin="anonymous" async="">
+</script>
+
+
+    </div>
+  
+
+</body></html>
