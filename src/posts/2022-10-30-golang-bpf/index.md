@@ -33,15 +33,14 @@ Attaching 1 probe...
 ```
 
 Sometimes it is easier to use the function address instead of the
-function name. First, use the following command to find the function
-address:
+function name. First, get the function address:
 
 ```text
 $ objdump -t example | grep mainTest
 0000000000459e60 g     F .text  00000000000000ea main.mainTest
 ```
 
-Then attach the probe to the function address:
+Then attach a probe to the address:
 
 ```text
 $ sudo bpftrace -p 19162 -e 'uprobe:./example:0x0000000000459e60 {printf("here\n");}'
@@ -51,8 +50,8 @@ Attaching 1 probe...
 ## 2. Calling convention
 
 To figure out go calling conventions, we could compose some simple
-functions, then look at their corresponding assembly code.  For
-example, the following simple function:
+functions, then look at their generated assembly code.  For example,
+the following simple function:
 
 ```go
 func fewArgsTest(a1, a2, a3, a4 uint64) (uint64, uint64, uint64, uint64) {
@@ -60,7 +59,7 @@ func fewArgsTest(a1, a2, a3, a4 uint64) (uint64, uint64, uint64, uint64) {
 }
 ```
 
-We can get its assembly code:
+We can disassemble this function (at `0x0000000000459d20`):
 
 ```text
 $ gdb -batch -ex 'file ./example' -ex 'disassemble 0x0000000000459d20'
@@ -73,7 +72,7 @@ Dump of assembler code for function main.fewArgsTest:
 End of assembler dump.
 ```
 
-It's easy to see that the four arguments are passed in registers
+It's easy to see that the four arguments are passed in the registers
 `rax`, `rbx`, `rcx`, and `rdi`.
 
 This [example code]({% srcLink example.go%}) has more such functions.
