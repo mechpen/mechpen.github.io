@@ -1,10 +1,10 @@
 ---
-template: default.html
+_template: default.html
 
 ---
 
 <div class="posts">
-  {% assign sortedpages = allpages | sort: "date" %}
+  {% assign sortedpages = _srcPages | sort: "date" %}
   {% for page in sortedpages reversed %}
   {% if page.type == "post" and page.list %}
     <article class="post">

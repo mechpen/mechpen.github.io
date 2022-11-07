@@ -10,7 +10,7 @@ function mapUrl(pathName) {
 function srcLink(name) {
   return (data) => {
     let baseUrl = "https://github.com/mechpen/mechpen.github.io/blob/src"
-    name = path.join(data.srcDir, path.dirname(data.current), name)
+    name = path.join(data._srcDir, path.dirname(data._current), name)
     return baseUrl + mapUrl(name)
   }
 }
@@ -18,9 +18,9 @@ function srcLink(name) {
 function loadPgf(name) {
   return (data) => {
     let base = path.basename(name, ".tex")
-    let relDir = path.dirname(data.current)
-    let srcDir = path.join(data.srcDir, relDir)
-    let dstDir = path.join(data.dstDir, relDir)
+    let relDir = path.dirname(data._current)
+    let srcDir = path.join(data._srcDir, relDir)
+    let dstDir = path.join(data._dstDir, relDir)
     let cmd
 
     cmd = `pdflatex -halt-on-error -output-directory ${tmpDir} ${srcDir}/${name}`

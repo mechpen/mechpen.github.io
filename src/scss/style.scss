@@ -48,15 +48,6 @@ h1, h2, h3, h4, h5, h6 {
   a {
     color: inherit;
   }
-  .header-anchor {
-      display: none;
-  }
-  &:hover, &:active {
-    .header-anchor {
-      display: inline;
-      color: var(--link-color);
-    }
-  }
 }
 
 h1 {
@@ -106,8 +97,9 @@ code:not([class]) {
 
 table {
   border-collapse: collapse;
-  width: 100%;
   font-size: 0.8em;
+  margin-left: auto;
+  margin-right: auto;
   margin-top: 15px;
   margin-bottom: 15px;
 }

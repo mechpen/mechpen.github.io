@@ -1,0 +1,18 @@
+// recursion
+uprobe:./crash:0x000000000048ba00 {
+  @level += 1;
+  $offset = @ret - reg("sp");
+  printf("recursion %d %x %p %p\n", @level, $offset, @ret, *(uint64 *)@ret);
+}
+
+// mainTest
+uprobe:./crash:0x000000000048ba60 {
+  @level = 0;
+  @ret = reg("sp");
+}
+
+// return mainTest
+uretprobe:./crash:0x000000000048ba60 {
+  $a = reg("sp")-(uint64)0x8;
+  printf("mainTest ret %p %p\n", $a, *(uint64 *)$a);
+}

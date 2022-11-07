@@ -1,0 +1,6 @@
+_templateDir: templates
+_copyThrough:
+  - assets
+styles:
+  - /assets/prism.css
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css

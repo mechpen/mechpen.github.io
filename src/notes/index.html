@@ -5,7 +5,7 @@ title: Notes
 
 <div class="vskip"></div>
 <div class="notes">
-  {% assign sortedpages = allpages | sort: "url" %}
+  {% assign sortedpages = _srcPages | sort: "url" %}
   {% for page in sortedpages %}
   {% if page.type == "note" and page.list  %}
   <a class="note" href="{{ page.url }}">{{ page.title }}</a>
