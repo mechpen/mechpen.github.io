@@ -65,24 +65,23 @@ Some tips and findings on tracing go binaries using bpftrace.
 Attaching 1 probe...
 </code></pre>
 <p>Sometimes it is easier to use the function address instead of the
-function name. First, use the following command to find the function
-address:</p>
+function name. First, get the function address:</p>
 <pre class="language-text" tabindex="0"><code class="language-text">$ objdump -t example | grep mainTest
 0000000000459e60 g     F .text  00000000000000ea main.mainTest
 </code></pre>
-<p>Then attach the probe to the function address:</p>
+<p>Then attach a probe to the address:</p>
 <pre class="language-text" tabindex="0"><code class="language-text">$ sudo bpftrace -p 19162 -e 'uprobe:./example:0x0000000000459e60 {printf("here\n");}'
 Attaching 1 probe...
 </code></pre>
 <h2 id="2.-calling-convention" tabindex="-1"><a class="header-anchor" href="#2.-calling-convention">2. Calling convention</a></h2>
 <p>To figure out go calling conventions, we could compose some simple
-functions, then look at their corresponding assembly code.  For
-example, the following simple function:</p>
+functions, then look at their generated assembly code.  For example,
+the following simple function:</p>
 <pre class="language-go" tabindex="0"><code class="language-go"><span class="token keyword">func</span> <span class="token function">fewArgsTest</span><span class="token punctuation">(</span>a1<span class="token punctuation">,</span> a2<span class="token punctuation">,</span> a3<span class="token punctuation">,</span> a4 <span class="token builtin">uint64</span><span class="token punctuation">)</span> <span class="token punctuation">(</span><span class="token builtin">uint64</span><span class="token punctuation">,</span> <span class="token builtin">uint64</span><span class="token punctuation">,</span> <span class="token builtin">uint64</span><span class="token punctuation">,</span> <span class="token builtin">uint64</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
 	<span class="token keyword">return</span> a1<span class="token operator">+</span><span class="token number">0x11</span><span class="token punctuation">,</span> a2<span class="token operator">+</span><span class="token number">0x22</span><span class="token punctuation">,</span> a3<span class="token operator">+</span><span class="token number">0x33</span><span class="token punctuation">,</span> a4<span class="token operator">+</span><span class="token number">0x44</span>
 <span class="token punctuation">}</span>
 </code></pre>
-<p>We can get its assembly code:</p>
+<p>We can disassemble this function (at <code>0x0000000000459d20</code>):</p>
 <pre class="language-text" tabindex="0"><code class="language-text">$ gdb -batch -ex 'file ./example' -ex 'disassemble 0x0000000000459d20'
 Dump of assembler code for function main.fewArgsTest:
    0x0000000000459d20 &lt;+0&gt;:     add    $0x11,%rax
@@ -92,7 +91,7 @@ Dump of assembler code for function main.fewArgsTest:
    0x0000000000459d30 &lt;+16&gt;:    ret
 End of assembler dump.
 </code></pre>
-<p>It's easy to see that the four arguments are passed in registers
+<p>It's easy to see that the four arguments are passed in the registers
 <code>rax</code>, <code>rbx</code>, <code>rcx</code>, and <code>rdi</code>.</p>
 <p>This <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2022-10-30-golang-bpf/example.go">example code</a> has more such functions.
 The following are some results for Go 1.19.</p>
