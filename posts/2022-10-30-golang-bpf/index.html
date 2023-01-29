@@ -243,11 +243,11 @@ may move the current stack to a larger stack.</p>
 <p>Here are the events that lead to a crash:</p>
 <ol>
 <li>
-<p><code>uretprobe</code> installs a trap (<code>int 3</code>) at <code>&amp;mainTest</code>.</p>
+<p><code>uretprobe</code> installs a trap instruction (<code>int 3</code>) at <code>&amp;mainTest</code>.</p>
 </li>
 <li>
-<p>CPU executes instruction <code>call mainTest</code>.  The return address is
-pushed to the stack.</p>
+<p>CPU executes the instruction <code>call mainTest</code>.  The return address
+is pushed to the stack.</p>
 </li>
 <li>
 <p>The trap is triggered and the trap handler overwrites the return
