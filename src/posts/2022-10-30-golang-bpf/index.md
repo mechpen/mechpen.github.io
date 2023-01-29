@@ -201,10 +201,10 @@ may move the current stack to a larger stack.
 
 Here are the events that lead to a crash:
 
-1. `uretprobe` installs a trap (`int 3`) at `&mainTest`.
+1. `uretprobe` installs a trap instruction (`int 3`) at `&mainTest`.
 
-2. CPU executes instruction `call mainTest`.  The return address is
-   pushed to the stack.
+2. CPU executes the instruction `call mainTest`.  The return address
+   is pushed to the stack.
 
 3. The trap is triggered and the trap handler overwrites the return
    address in the stack with the address of a trampoline code (located
