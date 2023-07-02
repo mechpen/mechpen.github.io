@@ -1,0 +1,33 @@
+#include <linux/fs.h>
+#include <linux/path.h>
+#include <linux/dcache.h>
+
+kprobe:__lookup_slow {
+  $name = ((struct qstr *)arg0)->name;
+  $dir = ((struct dentry *)arg1)->d_name.name;
+
+  printf("lookup_slow %s/%s\n", str($dir), str($name));
+}
+
+kretprobe:__lookup_slow {
+  printf("lookup_slow %p\n", retval);
+}
+
+kprobe:d_alloc_parallel {
+  $dir = ((struct dentry *)arg0)->d_name.name;
+  $name = ((struct qstr *)arg1)->name;
+
+  printf("d_alloc_parallel %s/%s\n", str($dir), str($name));
+}
+
+kretprobe:d_alloc_parallel {
+  printf("d_alloc_parallel %p\n", retval);
+}
+
+kprobe:dput {
+  $entry = (struct dentry *)arg0;
+  $name = $entry->d_name.name;
+  if (strncmp(str($name), "5", 1) == 0) {
+    printf("dput %p %s %s\n", $entry, str($name), kstack);
+  }
+}

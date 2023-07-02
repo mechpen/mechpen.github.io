@@ -1,0 +1,73 @@
+* strace out for ls -l 
+
+openat(AT_FDCWD, "/proc/429/fd", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
+newfstatat(3, "", {st_mode=S_IFDIR|0500, st_size=4, ...}, AT_EMPTY_PATH) = 0
+getdents64(3, 0x55e20385aa90 /* 6 entries */, 32768) = 144
+statx(AT_FDCWD, "/proc/429/fd/0", AT_STATX_SYNC_AS_STAT|AT_SYMLINK_NOFOLLOW|AT_NO_AUTOMOUNT, STATX_MODE|STATX_NLINK|STATX_UID|STATX_GID|STATX_MTIME|STATX_SIZE, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFLNK|0700, stx_size=64, ...}) = 0
+readlink("/proc/429/fd/0", "/dev/pts/3", 65) = 10
+statx(AT_FDCWD, "/proc/429/fd/1", AT_STATX_SYNC_AS_STAT|AT_SYMLINK_NOFOLLOW|AT_NO_AUTOMOUNT, STATX_MODE|STATX_NLINK|STATX_UID|STATX_GID|STATX_MTIME|STATX_SIZE, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFLNK|0700, stx_size=64, ...}) = 0
+readlink("/proc/429/fd/1", "/dev/pts/3", 65) = 10
+statx(AT_FDCWD, "/proc/429/fd/2", AT_STATX_SYNC_AS_STAT|AT_SYMLINK_NOFOLLOW|AT_NO_AUTOMOUNT, STATX_MODE|STATX_NLINK|STATX_UID|STATX_GID|STATX_MTIME|STATX_SIZE, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFLNK|0700, stx_size=64, ...}) = 0
+readlink("/proc/429/fd/2", "/dev/pts/3", 65) = 10
+statx(AT_FDCWD, "/proc/429/fd/255", AT_STATX_SYNC_AS_STAT|AT_SYMLINK_NOFOLLOW|AT_NO_AUTOMOUNT, STATX_MODE|STATX_NLINK|STATX_UID|STATX_GID|STATX_MTIME|STATX_SIZE, {stx_mask=STATX_BASIC_STATS|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFLNK|0700, stx_size=64, ...}) = 0
+readlink("/proc/429/fd/255", "/dev/pts/3", 65) = 10
+getdents64(3, 0x55e20385aa90 /* 0 entries */, 32768) = 0
+close(3)                                = 0
+
+* kernel stack trace for ls -l
+
+        proc_fd_instantiate+1
+        proc_fill_cache+272
+        proc_readfd_common+186
+        iterate_dir+333
+        __x64_sys_getdents64+132
+        do_syscall_64+91
+        entry_SYSCALL_64_after_hwframe+99
+
+* when deleting a regular file:
+
+        d_delete+1
+        vfs_unlink+499
+        do_unlinkat+457
+        __x64_sys_unlinkat+51
+        do_syscall_64+91
+        entry_SYSCALL_64_after_hwframe+99
+
+  TODO: code path for fd creation and closing fd
+
+* dentry leak?  When is dentry cleared?
+
+* kernel stack trace for stat /proc/<pid>fd/5
+
+d_alloc_parallel fd/5
+d_alloc_parallel 0xffff8fcfc5fa30c0
+dput 0xffff8fcfc5fa30c0 5
+
+dput 0xffff8fcfc5fa30c0 5
+        dput+1
+        lookup_fast +139
+        walk_component +38
+        path_lookupat +103
+        filename_lookup +224
+        vfs_statx+158
+        do_statx+97
+        __x64_sys_statx+98
+        do_syscall_64+91
+        entry_SYSCALL_64_after_hwframe+99
+
+lookup_slow fd/5
+d_alloc_parallel fd/5
+d_alloc_parallel 0xffff8fcfc5c15480
+dput 0xffff8fcfc5c15480 5
+        dput+1
+        __lookup_slow+271
+        walk_component+252
+        path_lookupat+103
+        filename_lookup+224
+        vfs_statx+158
+        do_statx+97
+        __x64_sys_statx+98
+        do_syscall_64+91
+        entry_SYSCALL_64_after_hwframe+99
+
+lookup_slow 0xfffffffffffffffe

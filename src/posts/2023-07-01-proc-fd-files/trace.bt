@@ -1,0 +1,10 @@
+#include <linux/fs.h>
+#include <linux/path.h>
+#include <linux/dcache.h>
+
+kprobe:proc_readfd_common {
+  $dentry = ((struct file *)arg0)->f_path.dentry;
+  $path = $dentry->d_name.name;
+  $count = $dentry->d_lockref.count;
+  printf("dir %s count %ld\n", str($path), $count);
+}

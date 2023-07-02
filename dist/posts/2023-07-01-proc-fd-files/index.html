@@ -1,0 +1,197 @@
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Lifecycle of proc fd files – Mechpen</title>
+
+
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="stylesheet" href="/assets/style.css">
+
+    
+    
+    <link href="/assets/prism.css" rel="stylesheet">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css" rel="stylesheet">
+    
+  </head>
+
+  <body>
+    <div>
+      <div class="container">
+        <header class="masthead clearfix">
+          <div class="site-info">
+            <a href="/" class="site-name">Mechpen</a>
+          </div>
+          <nav>
+	    <a href="/">posts</a>
+	    <a href="/notes">notes</a>
+	    <a href="/about">about</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <div class="post">
+  <h1>Lifecycle of proc fd files</h1>
+
+  <div class="date">
+    July  1, 2023
+  </div>
+
+  <div class="entry">
+    <p>
+The fd files under <code>/proc/&lt;pid&gt;/fd/</code> are created
+when a process read or list the fd files.  When a file descriptor is
+closed, the fd file is gone but the inode of the fd file stays in
+the VFS dcache.
+</p>
+    <h2 id="1.-demos" tabindex="-1"><a class="header-anchor" href="#1.-demos">1. Demos</a></h2>
+<h3 id="1.1.-fd-times" tabindex="-1"><a class="header-anchor" href="#1.1.-fd-times">1.1. fd times</a></h3>
+<p>The times of a fd file tell when the fd file is first accessed (when
+the fd file is instantiated).  It has nothing to do with the times of
+the target file.  For example, <code>ls -l</code> output may have the same time
+for all the files, even when they are created at different times:</p>
+<pre class="language-text" tabindex="0"><code class="language-text">[root@archlinux fd]# ls -l
+total 0
+lrwx------ 1 root root 64 Apr 16 21:36 0 -&gt; /dev/pts/2
+lrwx------ 1 root root 64 Apr 16 21:36 1 -&gt; /dev/pts/2
+lrwx------ 1 root root 64 Apr 16 21:36 2 -&gt; /dev/pts/2
+lrwx------ 1 root root 64 Apr 16 21:36 3 -&gt; 'socket:[29645]'
+lrwx------ 1 root root 64 Apr 16 21:36 4 -&gt; 'socket:[29649]'
+</code></pre>
+<p>We could use <code>stat -L</code> to get the target file inode info.  For
+example, for a socket fd:</p>
+<pre class="language-text" tabindex="0"><code class="language-text">[root@archlinux fd]# stat -L 3
+  File: 3
+  Size: 0               Blocks: 0          IO Block: 4096   socket
+Device: 0,7     Inode: 29645       Links: 1
+Access: (0777/srwxrwxrwx)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 1970-01-01 00:00:00.000000000 +0000
+Modify: 1970-01-01 00:00:00.000000000 +0000
+Change: 1970-01-01 00:00:00.000000000 +0000
+ Birth: -
+</code></pre>
+<p>Note that all times for socket files are at epoch 0.  Because it is
+not set in the <a href="https://github.com/torvalds/linux/blob/649c15c7691e9b13cbe9bf6c65c365350e056067/net/socket.c#L625"><code>sock_alloc()</code>
+function</a>.</p>
+<h3 id="1.2.-hidden-inodes" tabindex="-1"><a class="header-anchor" href="#1.2.-hidden-inodes">1.2. Hidden inodes</a></h3>
+<p>To show the existence of hidden fd inodes, we could use a <a href="https://github.com/mechpen/mechpen.github.io/blob/src/src/posts/2023-07-01-proc-fd-files/trace.bt">bpftrace
+script</a> to print the real number of inodes
+under a <code>fd</code> dir.</p>
+<p>For example, the following shows a fd dir having only 3 visible files
+but 1004 inodes.  1001 inodes are hidden.</p>
+<pre class="language-text" tabindex="0"><code class="language-text">[root@archlinux ~]# ls /proc/1408/fd
+0  1  2
+</code></pre>
+<pre class="language-text" tabindex="0"><code class="language-text">[root@archlinux ~]# bpftrace trace.bt
+Attaching 1 probe...
+dir fd count 1004
+</code></pre>
+<h2 id="2.-source-code-study" tabindex="-1"><a class="header-anchor" href="#2.-source-code-study">2. Source Code Study</a></h2>
+<h3 id="2.1.-all-fd-files-are-symlinks" tabindex="-1"><a class="header-anchor" href="#2.1.-all-fd-files-are-symlinks">2.1. All fd files are symlinks</a></h3>
+<p>Fd files belong to the <code>proc</code> filesystem.  Each fd file is a symbolic
+link that points to a file in another filesystem.  The <a href="https://github.com/torvalds/linux/blob/0ec57cfa721fbd36b4c4c0d9ccc5d78a78f7fa35/fs/proc/fd.c#L197">following
+code</a>
+creates the inode for the fd file:</p>
+<pre class="language-c" tabindex="0"><code class="language-c"><span class="token keyword">static</span> <span class="token keyword">struct</span> <span class="token class-name">dentry</span> <span class="token operator">*</span><span class="token function">proc_fd_instantiate</span><span class="token punctuation">(</span><span class="token keyword">struct</span> <span class="token class-name">dentry</span> <span class="token operator">*</span>dentry<span class="token punctuation">,</span>
+	<span class="token keyword">struct</span> <span class="token class-name">task_struct</span> <span class="token operator">*</span>task<span class="token punctuation">,</span> <span class="token keyword">const</span> <span class="token keyword">void</span> <span class="token operator">*</span>ptr<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+	<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+	inode <span class="token operator">=</span> <span class="token function">proc_pid_make_inode</span><span class="token punctuation">(</span>dentry<span class="token operator">-&gt;</span>d_sb<span class="token punctuation">,</span> task<span class="token punctuation">,</span> S_IFLNK<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+	inode<span class="token operator">-&gt;</span>i_op <span class="token operator">=</span> <span class="token operator">&amp;</span>proc_pid_link_inode_operations<span class="token punctuation">;</span>
+	<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+	ei<span class="token operator">-&gt;</span>op<span class="token punctuation">.</span>proc_get_link <span class="token operator">=</span> proc_fd_link<span class="token punctuation">;</span>
+	<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">static</span> <span class="token keyword">int</span> <span class="token function">proc_fd_link</span><span class="token punctuation">(</span><span class="token keyword">struct</span> <span class="token class-name">dentry</span> <span class="token operator">*</span>dentry<span class="token punctuation">,</span> <span class="token keyword">struct</span> <span class="token class-name">path</span> <span class="token operator">*</span>path<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+        <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+	task <span class="token operator">=</span> <span class="token function">get_proc_task</span><span class="token punctuation">(</span><span class="token function">d_inode</span><span class="token punctuation">(</span>dentry<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        fd <span class="token operator">=</span> <span class="token function">proc_fd</span><span class="token punctuation">(</span><span class="token function">d_inode</span><span class="token punctuation">(</span>dentry<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        fd_file <span class="token operator">=</span> <span class="token function">fget_task</span><span class="token punctuation">(</span>task<span class="token punctuation">,</span> fd<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token operator">*</span>path <span class="token operator">=</span> fd_file<span class="token operator">-&gt;</span>f_path<span class="token punctuation">;</span>
+        <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>The <code>S_IFLNK</code> flag makes the returned inode a symlink.  The inode
+operation struct <code>proc_pid_link_inode_operations</code> has a <code>readlink</code>
+operator that calls the function <code>proc_fd_link()</code> to resolve the
+target file path.</p>
+<p>The function <code>proc_fd_link()</code> gets the task struct and the fd number
+from the inode, then it gets the target file path from the task's open
+file table.  This way <code>proc_fd_link()</code> always returns the current
+target file path even when the target file is changed.</p>
+<h2 id="2.2-lifecycle-of-the-fd-files" tabindex="-1"><a class="header-anchor" href="#2.2-lifecycle-of-the-fd-files">2.2 Lifecycle of the fd files</a></h2>
+<p>A fd file is not created when a process opens the file.  Instead, it
+is instantiated when the fd file is accessed, e.g. when we run <code>ls /prod/&lt;pid&gt;/fd</code>.</p>
+<p>When the process closes the file, the inode of the fd file is not
+removed.  It stays in the <code>dcache</code> until the fd file is accessed
+again, then the kernel notices that the file is gone and removes the
+inode.</p>
+<p>If the fd nubmer is reused, the inode of the fd file is not recreated
+but reused for the new file.  When the fd is read, the <code>proc_fd_link</code>
+operator function returns the new target file path.</p>
+<p>The kernel function for creating the fd file is <code>proc_fd_instantiate</code>.
+It is invoked by the <code>ls /proc/&lt;pid&gt;/fd</code> command or the <code>stat /proc/&lt;pid&gt;/fd/&lt;fd&gt;</code> command.  The following shows the related code
+and call stacks.</p>
+<pre class="language-c" tabindex="0"><code class="language-c"><span class="token keyword">static</span> <span class="token keyword">const</span> <span class="token keyword">struct</span> <span class="token class-name">pid_entry</span> tgid_base_stuff<span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">{</span>
+	<span class="token function">DIR</span><span class="token punctuation">(</span><span class="token string">"fd"</span><span class="token punctuation">,</span> S_IRUSR<span class="token operator">|</span>S_IXUSR<span class="token punctuation">,</span> proc_fd_inode_operations<span class="token punctuation">,</span> proc_fd_operations<span class="token punctuation">)</span><span class="token punctuation">,</span>
+	<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">const</span> <span class="token keyword">struct</span> <span class="token class-name">file_operations</span> proc_fd_operations <span class="token operator">=</span> <span class="token punctuation">{</span>
+	<span class="token punctuation">.</span>iterate_shared	<span class="token operator">=</span> proc_readfd<span class="token punctuation">,</span>
+	<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+<span class="token function">proc_readfd</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">proc_readfd_common</span><span class="token punctuation">(</span>file<span class="token punctuation">,</span> ctx<span class="token punctuation">,</span> proc_fd_instantiate<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">proc_fd_instantiate</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">const</span> <span class="token keyword">struct</span> <span class="token class-name">inode_operations</span> proc_fd_inode_operations <span class="token operator">=</span> <span class="token punctuation">{</span>
+	<span class="token punctuation">.</span>lookup		<span class="token operator">=</span> proc_lookupfd<span class="token punctuation">,</span>
+	<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">}</span>
+
+<span class="token function">lookup_slow</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">proc_lookupfd</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">proc_lookupfd_common</span><span class="token punctuation">(</span>dir<span class="token punctuation">,</span> dentry<span class="token punctuation">,</span> proc_fd_instantiate<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">proc_fd_instantiate</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<p>The <code>ls</code> command reads the <code>fd</code> directory by calling the VFS file
+operator <code>iterate_shared</code>, which calls <code>proc_fd_instantiate</code> to create
+the inode.  Similarly, the <code>stat</code> command calls the inode operator
+<code>lookup</code>, which calls <code>proc_fd_instantiate</code>.  Details of the VFS API
+can be found <a href="https://www.kernel.org/doc/html/next/filesystems/vfs.html">here</a>.</p>
+<p>The call stack for deleting a fd inode is:</p>
+<pre class="language-c" tabindex="0"><code class="language-c"><span class="token function">lookup_fast</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token operator">--</span><span class="token operator">&gt;</span> dentry <span class="token operator">=</span> <span class="token function">__d_lookup_rcu</span><span class="token punctuation">(</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">d_revalidate</span><span class="token punctuation">(</span>dentry<span class="token punctuation">,</span> nd<span class="token operator">-&gt;</span>flags<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">tid_fd_revalidate</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">dput</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+    <span class="token operator">--</span><span class="token operator">&gt;</span> <span class="token function">iput</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<p>The function <code>lookup_fast()</code> calls <code>__d_lookup_rcu()</code> to get the
+<code>dentry</code> from <code>dcache</code>.  Then it calls <code>d_revalidate()</code> to check if
+the file still exists.  If the file is closed, <code>dput()</code> is called to
+release the <code>dentry</code> and frees its connected inode.</p>
+
+  </div>
+</div>
+<div class="vskip"></div>
+<script src="https://utteranc.es/client.js" repo="mechpen/mechpen.github.io" issue-term="pathname" label="comment" theme="github-light" crossorigin="anonymous" async="">
+</script>
+
+
+    </div>
+  
+
+</body></html>
