@@ -5,9 +5,10 @@ list: true
 excerpt: |
 
   The fd files under <code>/proc/&lt;pid&gt;/fd/</code> are created
-  when a process read or list the fd files.  When a file descriptor is
-  closed, the fd file is gone but the inode of the fd file stays in
-  the VFS dcache.
+  when a user read or list the fd files instead of when the actual
+  files are opened.  When an open file is closed, the inode of the
+  corresponding fd file stays in the VFS dcache, and could be reused
+  later.
 
 ---
 
