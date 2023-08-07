@@ -51,10 +51,10 @@
       <div class="entry">
         <p>
 The fd files under <code>/proc/&lt;pid&gt;/fd/</code> are created
-when a user read or list the fd files instead of when the actual
-files are opened.  When an open file is closed, the inode of the
-corresponding fd file stays in the VFS dcache, and could be reused
-later.
+when a user reads or lists the fd files, not when the actual files
+are opened.  The inode of a fd file is not deleted when the file is
+closed.  This inode is disconnected with the closed file and stays
+in the VFS dcache.
 </p>
       </div>
 
