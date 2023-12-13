@@ -50,6 +50,7 @@ I dived into the kernel scheduler code under
 task group <code>cpu.shares</code> value is used in CFS.
 </p>
     <p><strong>Update</strong> [Jul/21]: Added info for cgroup v2 in section 3.2.</p>
+<p><strong>Update</strong> [Dec/13]: Fixed the equation for <code>calc_delta_fair()</code></p>
 <h2 id="1.-cfs-concepts" tabindex="-1"><a class="header-anchor" href="#1.-cfs-concepts">1. CFS concepts</a></h2>
 <p>In CFS, every running entity, a process or a task group, has a virtual
 runtime (<code>vruntime</code>) which accounts for the entity's CPU usage. The
@@ -324,9 +325,9 @@ of the current entity.  The follwoing shows the related code snippet:</p>
 accordingly in <code>update_min_vruntime()</code>.</p>
 <p>Function <code>calc_delta_fair()</code> multiplies <code>delta_exec</code> by a relative
 weight factor and returns</p>
-<pre class="language-text" tabindex="0"><code class="language-text">                              curr-&gt;load.weight
+<pre class="language-text" tabindex="0"><code class="language-text">                                 NICE_0_LOAD
                 delta_exec * ———————————————————
-                                 NICE_0_LOAD
+                              curr-&gt;load.weight
 </code></pre>
 <p><code>NICE_0_LOAD</code> is the default weight (1024) for nice level 0.  So for a
 processe with the default nice level, its <code>vruntime</code> equals to its

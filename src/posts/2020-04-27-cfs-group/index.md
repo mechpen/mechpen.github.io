@@ -12,6 +12,8 @@ excerpt: |
 
 **Update** [Jul/21]: Added info for cgroup v2 in section 3.2.
 
+**Update** [Dec/13]: Fixed the equation for `calc_delta_fair()`
+
 ## 1. CFS concepts
 
 In CFS, every running entity, a process or a task group, has a virtual
@@ -291,9 +293,9 @@ Function `calc_delta_fair()` multiplies `delta_exec` by a relative
 weight factor and returns
 
 ```text
-                              curr->load.weight
-                delta_exec * ———————————————————
                                  NICE_0_LOAD
+                delta_exec * ———————————————————
+                              curr->load.weight
 ```
 
 `NICE_0_LOAD` is the default weight (1024) for nice level 0.  So for a
