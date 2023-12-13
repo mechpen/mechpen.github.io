@@ -10,9 +10,9 @@ excerpt: |
 
 ---
 
-**Update** [Jul/21]: Added info for cgroup v2 in section 3.2.
+**Update** [Jul/21/2021]: Added info for cgroup v2 in section 3.2.
 
-**Update** [Dec/13]: Fixed the equation for `calc_delta_fair()`
+**Update** [Dec/13/2023]: Fixed the equation for `calc_delta_fair()` in section 2.4
 
 ## 1. CFS concepts
 
